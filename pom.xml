@@ -6,6 +6,32 @@
 	<artifactId>spring-domain-crudify</artifactId>
 	<version>1.0.0</version>
 
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Jérémy Colombet</name>
+			<email>colombetj@gmail.com</email>
+		</developer>
+	</developers>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/mimir234/SpringDomainCrudify</url>
+		</snapshotRepository>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/mimir234/SpringDomainCrudify</url>
+		</repository>
+	</distributionManagement>
 
 	<dependencies>
 
@@ -46,7 +72,7 @@
 			<version>2.1.1</version>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -59,4 +85,5 @@
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
