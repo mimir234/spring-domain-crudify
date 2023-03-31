@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2022 Jérémy COLOMBET
  *******************************************************************************/
-package org.jco.spring.domain.crudify;
+package org.jco.spring.domain.crudify.repository.dto;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
