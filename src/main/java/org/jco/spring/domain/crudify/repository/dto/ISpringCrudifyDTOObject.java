@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Copyright (c) 2022 Jérémy COLOMBET
  *******************************************************************************/
-package org.jco.spring.domain.crudify;
+package org.jco.spring.domain.crudify.repository.dto;
 
 public interface ISpringCrudifyDTOObject<T> {
 	//-----------------------------------------------------------//
@@ -9,6 +9,7 @@ public interface ISpringCrudifyDTOObject<T> {
 	//-----------------------------------------------------------//	
 	
 	public void create(T entity);
+	
 	public T convert();
 
 	/**

@@ -1,13 +1,15 @@
 /*******************************************************************************
  * Copyright (c) 2022 Jérémy COLOMBET
  *******************************************************************************/
-package org.jco.spring.domain.crudify;
+package org.jco.spring.domain.crudify.repository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
+import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
+import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,21 +17,21 @@ import lombok.extern.slf4j.Slf4j;
 @SuppressWarnings("rawtypes")
 @Slf4j
 @EnableMongoRepositories
-public abstract class SpringCrudifyRepository<T, S extends AbstractSpringCrudifyDTOObject> implements ISpringCrudifyRepository<T>, ISpringCrudifyDatableRepository<T> {
+public abstract class AbstractSpringCrudifyRepository<T, S extends AbstractSpringCrudifyDTOObject> implements ISpringCrudifyRepository<T> {
 	
 	@Inject
-	protected ISpringCrudifyMongoRepository<S> mongoCrudRepository;
+	protected ISpringCrudifyDAORepository<S> daoRepository;
 
 	@Override
 	public boolean doesExists(String tenantId, String uuid) {
  
-		log.info("Checking if entity with uuid "+uuid+" exists.");
+		log.info("[Tenant "+tenantId+"] Checking if entity with uuid "+uuid+" exists.");
 		
-		if( this.mongoCrudRepository.findOneByUuidAndTenantId(uuid, tenantId) != null ){
+		if( this.daoRepository.findOneByUuidAndTenantId(uuid, tenantId) != null ){
 			log.info("Entity with uuid "+uuid+" exists.");
 			return true;
 		} 
-		log.info("Entity with uuid "+uuid+" does not exists.");
+		log.info("[Tenant "+tenantId+"] Entity with uuid "+uuid+" does not exists.");
 		return false;
 	}
 	
@@ -38,21 +40,23 @@ public abstract class SpringCrudifyRepository<T, S extends AbstractSpringCrudify
  
 		S object = this.convertToDTOObject(tenantId, entity);
 		
-		log.info("Checking if entity with uuid "+object.getUuid()+" exists.");
+		log.info("[Tenant "+tenantId+"] Checking if entity with uuid "+object.getUuid()+" exists.");
 		
-		if( this.mongoCrudRepository.findOneByUuidAndTenantId(object.getId(), object.getTenantId()) != null ){
-			log.info("Entity with uuid "+object.getUuid()+" exists.");
+		if( this.daoRepository.findOneByUuidAndTenantId(object.getId(), object.getTenantId()) != null ){
+			log.info("[Tenant "+tenantId+"] Entity with uuid "+object.getUuid()+" exists.");
 			return true;
 		} 
-		log.info("Entity with uuid "+object.getUuid()+" does not exists.");
+		log.info("[Tenant "+tenantId+"] Entity with uuid "+object.getUuid()+" does not exists.");
 		return false;
 	}
 
 
 	@Override
 	public List<T> getEntities(String tenantId) {
+		log.info("[Tenant "+tenantId+"] getting entities");
+
 		List<T> entities = new ArrayList<T>();
-		List<S> objects = this.mongoCrudRepository.findByTenantId(tenantId);
+		List<S> objects = this.daoRepository.findByTenantId(tenantId);
 		
 		objects.forEach(s ->{
 			entities.add(this.convertToEntity(s));
@@ -64,9 +68,9 @@ public abstract class SpringCrudifyRepository<T, S extends AbstractSpringCrudify
 	@Override
 	public void save(String tenantId, T entity) {
 		S object = this.convertToDTOObject(tenantId, entity);
-		log.info("Saving entity with uuid "+object.getUuid()+" exists.");
+		log.info("[Tenant "+tenantId+"] Saving entity with uuid "+object.getUuid()+" exists.");
 
-		this.mongoCrudRepository.save( object );
+		this.daoRepository.save( object );
 		
 	}
 
@@ -75,14 +79,14 @@ public abstract class SpringCrudifyRepository<T, S extends AbstractSpringCrudify
 		
 		S object = this.convertToDTOObject(tenantId, entity);
 		
-		S objectToBeUpdated = this.mongoCrudRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId());
-		log.info("Updating entity with uuid "+object.getUuid()+" exists.");
+		S objectToBeUpdated = this.daoRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId());
+		log.info("[Tenant "+tenantId+"] Updating entity with uuid "+object.getUuid()+" exists.");
 		
 		if( objectToBeUpdated != null ){
 			
 			this.update(objectToBeUpdated, object);
 			
-			this.mongoCrudRepository.save(objectToBeUpdated);
+			this.daoRepository.save(objectToBeUpdated);
 			
 			return this.convertToEntity(objectToBeUpdated);
 		
@@ -94,39 +98,40 @@ public abstract class SpringCrudifyRepository<T, S extends AbstractSpringCrudify
 	
 	@Override
 	public T getOneByUuid(String tenantId, String uuid) {
-		log.info("Looking for object with uuid "+uuid);
-		S object = this.mongoCrudRepository.findOneByUuidAndTenantId(uuid, tenantId);
+		log.info("[Tenant "+tenantId+"] Looking for object with uuid "+uuid);
+		S object = this.daoRepository.findOneByUuidAndTenantId(uuid, tenantId);
 		
 		if( object != null ){
-			log.info("Object with uuid "+uuid+" found !");
+			log.info("[Tenant "+tenantId+"] Object with uuid "+uuid+" found !");
 			return this.convertToEntity(object);
 		}
 		
-		log.info("Object with uuid "+uuid+" not found.");
+		log.info("[Tenant "+tenantId+"] Object with uuid "+uuid+" not found.");
 		return null;
 	}
 	
 	@Override
 	public T getOneById(String tenantId, String id) {
-		log.info("Looking for object with id "+id);
-		S object = this.mongoCrudRepository.findOneByIdAndTenantId(id, tenantId);
+		log.info("[Tenant "+tenantId+"] Looking for object with id "+id);
+		S object = this.daoRepository.findOneByIdAndTenantId(id, tenantId);
 		
 		if( object != null ){
-			log.info("Object with id "+id+" found !");
+			log.info("[Tenant "+tenantId+"] Object with id "+id+" found !");
 			return this.convertToEntity(object);
 		}
 		
-		log.info("Object with id "+id+" not found.");
+		log.info("[Tenant "+tenantId+"] Object with id "+id+" not found.");
 		return null;
 	}
 
 	@Override
 	public void delete(String tenantId, T entity) {
 		S object = this.convertToDTOObject(tenantId, entity);
+		log.info("[Tenant "+tenantId+"] Deleting entity with Uuid "+object.getUuid());
 		
-		this.mongoCrudRepository.delete(object);
-
+		this.daoRepository.delete(object);
 	}
+	
 
 	//-----------------------------------------------------------//
 	// Abstract method below to be implemented by sub classes    //

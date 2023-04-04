@@ -1,10 +1,9 @@
 /*******************************************************************************
  * Copyright (c) 2022 Jérémy COLOMBET
  *******************************************************************************/
-package org.jco.spring.domain.crudify;
+package org.jco.spring.domain.crudify.repository.dao.mongodb;
 
-import java.util.List;
-
+import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 
@@ -15,16 +14,8 @@ import org.springframework.data.repository.NoRepositoryBean;
  * @param <T>
  */
 @NoRepositoryBean
-public interface ISpringCrudifyMongoRepository<T> extends MongoRepository <T, String>{
+public interface ISpringCrudifyMongoRepository<T> extends MongoRepository <T, String>, ISpringCrudifyDAORepository<T> {
 
-	T findOneById(String id);
-	
-	T findOneByUuid(String uuid);
 
-	List<T> findByTenantId(String tenantId);
-
-	T findOneByUuidAndTenantId(String uuid, String tenantId);
-
-	T findOneByIdAndTenantId(String id, String tenantId);
 	
 }
