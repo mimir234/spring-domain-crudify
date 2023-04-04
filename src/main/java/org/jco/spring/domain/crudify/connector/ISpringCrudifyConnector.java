@@ -20,10 +20,6 @@ public interface ISpringCrudifyConnector <T extends ISpringCrudifyEntity> {
 
 	public T readEntity(String tenantId, String domain, String uuid) throws SpringCrudifyConnectorException;
 	
-	public List<String> getEntityUuidList(String tenantId, String domain) throws SpringCrudifyConnectorException;
-
-	public List<String> getEntityIdList(String tenantId, String domain) throws SpringCrudifyConnectorException;
-
-	public List<T> getEntityFullList(String tenantId, String domain) throws SpringCrudifyConnectorException;
+	public List<T> readEntityList(String tenantId, String domain) throws SpringCrudifyConnectorException;
 
 }

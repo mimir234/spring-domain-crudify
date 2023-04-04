@@ -5,10 +5,13 @@ package org.jco.spring.domain.crudify.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.jco.spring.domain.crudify.connector.ISpringCrudifyConnector;
+import org.jco.spring.domain.crudify.connector.SpringCrudifyConnectorException;
 import org.jco.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
@@ -35,13 +38,27 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	@Inject 
 	protected ISpringCrudifyRepository<T> crudRepository;
 	
+	@Inject
+	private Optional<ISpringCrudifyConnector<T>> crudConnector;
+	
 	/**
 	 * 
 	 */
 	@Override
 	public T getEntity(String tenantId, String uuid, String domain) throws SpringCrudifyEntityException {
 		log.info("[Tenant "+tenantId+"] Getting entity with Uuid "+uuid);
-		T entity = this.crudRepository.getOneByUuid(tenantId, uuid);
+		T entity = null;
+		
+		if (this.crudConnector.isPresent()) {
+			try {
+				entity = this.crudConnector.get().readEntity(tenantId, domain, uuid);
+			} catch (SpringCrudifyConnectorException e) {
+				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.UNKNOWN_ERROR, "Entity does not exist", e); 
+			}
+		} else {
+			entity = this.crudRepository.getOneByUuid(tenantId, uuid);
+		}
+
 		if( entity == null ) {
 			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND, "Entity does not exist"); 
 		}
@@ -51,7 +68,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	@Override
 	public T createEntity(String tenantId, T entity, String domain) throws SpringCrudifyEntityException {
 		
-		log.info("[Tenant "+tenantId+"] Creating entity of type "+entity.getClass());
+		log.info("[Tenant "+tenantId+"] Creating entity of domain "+domain);
 		
 		if( entity.getUuid() == null || entity.getUuid().isEmpty() ) {
 			entity.setUuid(UUID.randomUUID().toString());
@@ -59,21 +76,32 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 		
 		this.beforeCreate(tenantId, entity);
 		
-		if( this.crudRepository.doesExists(tenantId, entity) ){
-			throw new SpringCrudifyEntityException("Entity already exists"); 
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			
+			if( this.crudRepository.doesExists(tenantId, entity) ){
+				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_ALREADY_EXISTS, "Entity already exists"); 
+			}
+			
+			this.crudRepository.save(tenantId, entity);
 		}
-		
-		
-		this.crudRepository.save(tenantId, entity);
-		
+			
 		return entity;
 	}
 
 	@Override
 	public List<String> getEntityUuidList(String tenantId, String domain) throws SpringCrudifyEntityException {
-		log.info("[Tenant "+tenantId+"] Getting entities of type ");
+		log.info("[Tenant "+tenantId+"] Getting entities of domain "+domain);
 		ArrayList<String> entityUuids = new ArrayList<String>();
-		List<T> entities = this.crudRepository.getEntities(tenantId);
+
+		List<T> entities = null;
+		
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			entities = this.crudRepository.getEntities(tenantId);
+		}
 		
 		entities.forEach(e -> {
 			entityUuids.add(e.getUuid());
@@ -84,9 +112,16 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	
 	@Override
 	public List<String> getEntityIdList(String tenantId, String domain) throws SpringCrudifyEntityException {
-		log.info("[Tenant "+tenantId+"] Getting entities of type ");
+		log.info("[Tenant "+tenantId+"] Getting entities of domain "+domain);
 		ArrayList<String> entityUuids = new ArrayList<String>();
-		List<T> entities = this.crudRepository.getEntities(tenantId);
+		
+		List<T> entities = null;
+		
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			entities = this.crudRepository.getEntities(tenantId);
+		}
 		
 		entities.forEach(e -> {
 			entityUuids.add(e.getId());
@@ -97,40 +132,54 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	
 	@Override
 	public List<T> getEntityFullList(String tenantId, String domain) throws SpringCrudifyEntityException {
-		log.info("[Tenant "+tenantId+"] Getting entities of type ");
-		List<T> entities = this.crudRepository.getEntities(tenantId);
+		log.info("[Tenant "+tenantId+"] Getting entities of domain "+domain);
+		List<T> entities = null;
+		
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			entities = this.crudRepository.getEntities(tenantId);
+		}
 		return entities;
 	}
 
 	@Override
 	public T updateEntity(String tenantId, T entity, String domain) throws SpringCrudifyEntityException {
 		log.info("[Tenant "+tenantId+"] Updating entity with Uuid "+entity.getUuid());
+		T updated = null; 
 		
 		this.beforeUpdate(tenantId, entity);
-		
-		
-		if( !this.crudRepository.doesExists(tenantId, entity) ){
-			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND, "Entity does not exist"); 
-		}
 
-		T updated = this.crudRepository.update(tenantId, entity);
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			if( !this.crudRepository.doesExists(tenantId, entity) ){
+				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND, "Entity does not exist"); 
+			}
+
+			updated = this.crudRepository.update(tenantId, entity);
+		}
 		
 		return updated;
 	}
 
 	@Override
 	public void deleteEntity(String tenantId, String uuid, String domain) throws SpringCrudifyEntityException {
-		log.info("[Tenant "+tenantId+"] Deleting entity with Uuid "+uuid);
+		log.info("[Tenant "+tenantId+"] Deleting entity with Uuid "+uuid);		
 		
-		T entity = this.crudRepository.getOneByUuid(tenantId, uuid);
-		
-		if( entity == null ){
-			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND, "Entity does not exist"); 
+		if (this.crudConnector.isPresent()) {
+			
+		} else {
+			T entity = this.crudRepository.getOneByUuid(tenantId, uuid);
+			
+			if( entity == null ){
+				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND, "Entity does not exist"); 
+			}
+			
+			this.beforeDelete(tenantId, entity);
+			
+			this.crudRepository.delete(tenantId, entity);
 		}
-		
-		this.beforeDelete(tenantId, entity);
-		
-		this.crudRepository.delete(tenantId, entity);
 
 	}
 	
@@ -141,8 +190,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 		
 		for( T s: entities ) {
 			try {
-				this.beforeDelete(tenantId, s);
-				this.crudRepository.delete(tenantId, s);
+				this.deleteEntity(tenantId, s.getUuid(), domain);
 			} catch (SpringCrudifyEntityException e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.UNKNOWN_ERROR, "Error during entities deletion"); 
 			}
@@ -150,7 +198,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 	
 	//-----------------------------------------------------------//
-	// Abstract method below to be implemented by sub classes    //
+	// Abstract methods below to be implemented by sub classes    //
 	//-----------------------------------------------------------//	
 
 	protected abstract void beforeCreate(String tenantId, T entity) throws SpringCrudifyEntityException;

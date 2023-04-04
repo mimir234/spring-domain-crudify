@@ -25,8 +25,6 @@ public interface ISpringCrudifyRepository<T> {
 
 	void delete(String tenantId, T entity);
 	
-	void deleteAll(String tenantId);
-
 	boolean doesExists(String tenantId, String id);
 
 	T getOneByUuid(String tenantId, String uuid);

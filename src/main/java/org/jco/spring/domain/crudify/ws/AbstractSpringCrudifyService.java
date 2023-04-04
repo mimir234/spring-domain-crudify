@@ -4,10 +4,8 @@
 package org.jco.spring.domain.crudify.ws;
 
 import javax.inject.Inject;
-import javax.ws.rs.PathParam;
 
 import org.jco.spring.domain.crudify.controller.ISpringCrudifyController;
-import org.jco.spring.domain.crudify.controller.ISpringCrudifyErrorObject;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
 import org.springframework.http.HttpStatus;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -61,7 +60,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	/**
 	 * Creates an entity.
 	 * 
-	 * @param Customer
+	 * @param 
 	 * @return
 	 */
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -90,7 +89,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	 */
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	private ResponseEntity<?> getEntities(@RequestHeader String tenantId,
-			@PathParam(value = "mode") SpringCrudifyReadOutputMode mode) {
+			@RequestParam(value = "mode") SpringCrudifyReadOutputMode mode) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
