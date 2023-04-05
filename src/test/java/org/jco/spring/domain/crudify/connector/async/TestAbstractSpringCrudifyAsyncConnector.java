@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -21,31 +22,33 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
-public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudifyAsyncConnector<TestEntity>{
-	
+import org.jco.spring.domain.crudify.connector.async.TestEntity;
+
+public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudifyAsyncConnector<TestEntity, List<TestEntity>>{
+
 	static TestAbstractSpringCrudifyAsyncConnector connector = new TestAbstractSpringCrudifyAsyncConnector();
-	
+
 	static long responseDelay = 150;
-	
+
 	@BeforeAll
 	public static void setUp() {
-	    final Logger logger = (Logger)LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+	    final Logger logger = (Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
 	    logger.setLevel(Level.ALL);
 	}
-		
+
 	@Test
 	public void testReadEntity() throws SpringCrudifyConnectorException, ExecutionException {
 		System.out.println("*********************** testReadEntity");
 		TestAbstractSpringCrudifyAsyncConnector.connector.executor = Executors.newFixedThreadPool(10);
 		TestAbstractSpringCrudifyAsyncConnector.connector.timeout = 3;
 		TestAbstractSpringCrudifyAsyncConnector.connector.unit = TimeUnit.SECONDS;
-		
+
 		TestAbstractSpringCrudifyAsyncConnector.responseDelay = 150;
-		
+
 		TestEntity entity = new TestEntity("123456789", "123456789");
-		
+
 		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
-		
+
 		try {
 
 			while(!response.isDone()) {
@@ -56,7 +59,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 //			e.printStackTrace();
-		} 
+		}
 		TestEntity entityReponse = null;
 		try {
 			entityReponse = response.get();
@@ -70,20 +73,20 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 
 		assertNotNull(entityReponse);
 	}
-	
+
 	@Test
 	public void testReadEntityWithTimeout() throws SpringCrudifyConnectorException, ExecutionException {
 		System.out.println("*********************** testReadEntityWithTimeout");
 		TestAbstractSpringCrudifyAsyncConnector.connector.executor = Executors.newFixedThreadPool(10);
 		TestAbstractSpringCrudifyAsyncConnector.connector.timeout = 5;
 		TestAbstractSpringCrudifyAsyncConnector.connector.unit = TimeUnit.SECONDS;
-		
+
 		TestAbstractSpringCrudifyAsyncConnector.responseDelay = 150;
-		
+
 		TestEntity entity = new TestEntity("123456789", "123456789");
-		
+
 		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
-		
+
 		TestEntity entityReponse = null;
 		try {
 
@@ -95,24 +98,24 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		} catch (TimeoutException e) {
 			// TODO Auto-generated catch block
 //			e.printStackTrace();
-		} 
+		}
 
 		assertEquals(null, entityReponse);
 	}
-	
+
 	@Test
 	public void testReadEntityWithTimeoutBiggerThanConnector() throws SpringCrudifyConnectorException, ExecutionException {
 		System.out.println("*********************** testReadEntityWithTimeoutBiggerThanConnector");
 		TestAbstractSpringCrudifyAsyncConnector.connector.executor = Executors.newFixedThreadPool(10);
 		TestAbstractSpringCrudifyAsyncConnector.connector.timeout = 1;
 		TestAbstractSpringCrudifyAsyncConnector.connector.unit = TimeUnit.SECONDS;
-		
+
 		TestAbstractSpringCrudifyAsyncConnector.responseDelay = 150;
-		
+
 		TestEntity entity = new TestEntity("123456789", "123456789");
-		
+
 		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
-		
+
 		TestEntity entityReponse = null;
 		try {
 
@@ -125,24 +128,24 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		} catch (TimeoutException e) {
 			// TODO Auto-generated catch block
 //			e.printStackTrace();
-		} 
-		
+		}
+
 		assertNotNull(entityReponse);
 	}
-	
+
 	@Test
 	public void testReadEntityWithTimeoutBiggerThanConnectorAndResponseLate() throws SpringCrudifyConnectorException, ExecutionException, InterruptedException {
 		System.out.println("*********************** testReadEntityWithTimeoutBiggerThanConnectorAndResponseLate");
 		TestAbstractSpringCrudifyAsyncConnector.connector.executor = Executors.newFixedThreadPool(10);
 		TestAbstractSpringCrudifyAsyncConnector.connector.timeout = 1;
 		TestAbstractSpringCrudifyAsyncConnector.connector.unit = TimeUnit.SECONDS;
-		
+
 		TestAbstractSpringCrudifyAsyncConnector.responseDelay = 3000;
-		
+
 		TestEntity entity = new TestEntity("123456789", "123456789");
-		
+
 		Exception exception = assertThrows(ExecutionException.class, () -> {
-	        
+
 			Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
 
 			TestEntity entityReponse = null;
@@ -160,17 +163,18 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 			}
 
 		 });
-		
-		
+
+
 	}
-	
+
 
 
 	@Override
-	public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<TestEntity> message) throws SpringCrudifyConnectorException {
-		
+	public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<?> message) throws SpringCrudifyConnectorException {
+
 		Thread t = new Thread() {
-			
+
+			@Override
 			public void run() {
 				try {
 					Thread.sleep(TestAbstractSpringCrudifyAsyncConnector.responseDelay);
@@ -179,7 +183,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 					e.printStackTrace();
 				}
 
-				SpringCrudifyAsyncConnectorEnvelop<TestEntity> response = new SpringCrudifyAsyncConnectorEnvelop<TestEntity>(
+				SpringCrudifyAsyncConnectorEnvelop<?> response = new SpringCrudifyAsyncConnectorEnvelop<>(
 						SpringCrudifyAsyncMessageType.REQUEST, UUID.randomUUID().toString(), message.getMessageUuid(),
 						message.getTenantId(), message.getDomain(), SpringCrudifyAsyncResponseStatus.OK,
 						message.getOperation(), message.getEntity(), null, "Success");
@@ -203,5 +207,5 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		this.clazz = TestEntity.class;
 	}
 
-	
+
 }

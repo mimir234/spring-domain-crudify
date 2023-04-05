@@ -1,7 +1,6 @@
 package org.jco.spring.domain.crudify.connector.async;
 
 import org.jco.spring.domain.crudify.connector.ISpringCrudifyConnector.SpringCrudifyConnectorOperation;
-import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class SpringCrudifyAsyncConnectorEnvelop <T extends ISpringCrudifyEntity> {
+public class SpringCrudifyAsyncConnectorEnvelop <T> {
 	
 	private SpringCrudifyAsyncMessageType type;
 	

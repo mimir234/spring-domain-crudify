@@ -27,7 +27,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudifyEntity> implements ISpringCrudifyConnector<T> {
+public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudifyEntity, S extends List<T>> implements ISpringCrudifyConnector<T, S> {
 
 	@Inject
 	protected ExecutorService executor;
@@ -42,7 +42,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 	
 	private Object mapLocker = new Object(); 
 
-	private Map<String, SpringCrudifyAsyncConnectorPair<T>> receivedMessages = new HashMap<String, SpringCrudifyAsyncConnectorPair<T>>();
+	private Map<String, SpringCrudifyAsyncConnectorPair> receivedMessages = new HashMap<String, SpringCrudifyAsyncConnectorPair>();
 
 	protected Class<T> clazz;
 
@@ -74,49 +74,37 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 		}
 	}
 	
+	/*
+	 * This method drives me feeling sick, it has to be refactored ASAP !!!! The filosophy is to merge it with the requestEntity method.  
+	 */
 	@Override
-	public Future<List<T>> requestList(String tenantId, List<T> object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+	public Future<S> requestList(String tenantId, S list, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
 		log.info("[Tenant {}] [Domain {}] Processing request entity list operation {} ", tenantId, this.domain, operation);
 		
-		
-		
-		
-		
-		return null;
-	}	
-	
-	@Override
-	public Future<T> requestEntity(String tenantId, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
-		log.info("[Tenant {}] [Domain {}] Processing request entity operation {} ", tenantId, this.domain, operation);
-		
-		return this.executor.submit(new Callable<T>() {
+		return this.executor.submit(new Callable<S>() {
 			
-			public T call() throws SpringCrudifyConnectorException {
-				
-				if( object == null ) {
-					mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-				} else {
-					mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, true);
-				}
+			@SuppressWarnings("unchecked")
+			public S call() throws SpringCrudifyConnectorException {
+				mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, true);
 				
 				String uuid = UUID.randomUUID().toString();
 				String transactionUuid = uuid;
 				
 				Object locker = new Object();
 
-				SpringCrudifyAsyncConnectorEnvelop<T> message = new SpringCrudifyAsyncConnectorEnvelop<T>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, object.getDomain(), null, operation,
-						object, null, null);
+				SpringCrudifyAsyncConnectorEnvelop<S> message = new SpringCrudifyAsyncConnectorEnvelop<S>(
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, null, null, operation,
+						list, null, null);
 				
 				try {
-					log.info("[Tenant {}] [Domain {}] Sending request {}", tenantId, object.getDomain(), mapper.writeValueAsString(message));
+					log.info("[Tenant {}] [Domain {}] Sending request {}", tenantId, domain, mapper.writeValueAsString(message));
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
 				synchronized (mapLocker) {
-					receivedMessages.put(uuid, new SpringCrudifyAsyncConnectorPair<T>(locker, null));
+					receivedMessages.put(uuid, new SpringCrudifyAsyncConnectorPair(locker, null));
 				}
 				
 				publishRequest(message);
@@ -139,14 +127,14 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				
 				if( log.isDebugEnabled() ) log.debug("Thread awake");
 				
-				SpringCrudifyAsyncConnectorPair<T> pair = null;
+				SpringCrudifyAsyncConnectorPair pair = null;
 				synchronized (mapLocker) {
 					pair = receivedMessages.remove(uuid);
 				}
 				
 				if( pair.getEntity() == null ) {
 					try {
-						log.warn("[Tenant {}] [Domain {}] no message received for message {}", tenantId, object.getDomain(), mapper.writeValueAsString(message));
+						log.warn("[Tenant {}] [Domain {}] no message received for message {}", tenantId, domain, mapper.writeValueAsString(message));
 					} catch (JsonProcessingException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -156,19 +144,98 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				}
 				
 				if( log.isDebugEnabled() ) log.debug("map size "+receivedMessages.size());
-				return pair.getEntity().getEntity();
+				
+				return (S) pair.getEntity().getEntity();
+				
+			}
+		});
+	}
+	
+	
+	@Override
+	public Future<T> requestEntity(String tenantId, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+		log.info("[Tenant {}] [Domain {}] Processing request entity operation {} ", tenantId, this.domain, operation);
+		
+		return this.executor.submit(new Callable<T>() {
+			
+			@SuppressWarnings("unchecked")
+			public T call() throws SpringCrudifyConnectorException {
+				
+				if( object == null ) {
+					mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+				} else {
+					mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, true);
+				}
+				
+				String uuid = UUID.randomUUID().toString();
+				String transactionUuid = uuid;
+				
+				Object locker = new Object();
+
+				SpringCrudifyAsyncConnectorEnvelop<T> message = new SpringCrudifyAsyncConnectorEnvelop<T>(
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, object.getDomain(), null, operation,
+						object, null, null);
+				
+				try {
+					log.info("[Tenant {}] [Domain {}] Sending request {}", tenantId, domain, mapper.writeValueAsString(message));
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				synchronized (mapLocker) {
+					receivedMessages.put(uuid, new SpringCrudifyAsyncConnectorPair(locker, null));
+				}
+				
+				publishRequest(message);
+				
+				if( log.isDebugEnabled() ) log.debug("Thread sleeping for {} {}", timeout, unit.toString());
+				
+				long millis = TimeUnit.MILLISECONDS.convert(timeout, unit);
+				
+				if( log.isDebugEnabled() ) log.debug("Thread sleeping for {} ms", millis);
+				
+				try {
+					synchronized (locker) {
+						locker.wait(millis);
+					}
+					
+				} catch(InterruptedException e) {
+					//Message is received
+					if( log.isDebugEnabled() ) log.debug("Thread awake due to interruption exception");
+				}
+				
+				if( log.isDebugEnabled() ) log.debug("Thread awake");
+				
+				SpringCrudifyAsyncConnectorPair pair = null;
+				synchronized (mapLocker) {
+					pair = receivedMessages.remove(uuid);
+				}
+				
+				if( pair.getEntity() == null ) {
+					try {
+						log.warn("[Tenant {}] [Domain {}] no message received for message {}", tenantId, domain, mapper.writeValueAsString(message));
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					throw new SpringCrudifyConnectorException("No message received from connector");
+				}
+				
+				if( log.isDebugEnabled() ) log.debug("map size "+receivedMessages.size());
+				return (T) pair.getEntity().getEntity();
 			}
 		});
 
 	}
 
-	protected void onResponse(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException, JsonProcessingException {
-		
-		log.info("[Tenant {}] [Domain {}] Response received {}", message.getTenantId(), message.getEntity().getDomain(), this.mapper.writeValueAsString(message));
+	protected void onResponse(SpringCrudifyAsyncConnectorEnvelop<?> message) throws SpringCrudifyConnectorException, JsonProcessingException {
+		log.info("[Tenant {}] [Domain {}] Response received {}", message.getTenantId(), domain, this.mapper.writeValueAsString(message));
 		
 		String transactionUuid = message.getTransactionUuid();
 		
-		SpringCrudifyAsyncConnectorPair<T> pair = null;
+		SpringCrudifyAsyncConnectorPair pair = null;
 		synchronized (this.mapLocker) {
 			pair = this.receivedMessages.get(transactionUuid);
 		}
@@ -179,7 +246,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				pair.getLocker().notifyAll();
 			}
 		} else {
-			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), message.getEntity().getDomain(), message.getTransactionUuid());
+			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), domain, message.getTransactionUuid());
 		}
 		
 	}
@@ -188,6 +255,6 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 	// Abstract methods below to be implemented by sub classes //
 	// -----------------------------------------------------------//
 
-	abstract public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException;
-
+	abstract public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<?> message) throws SpringCrudifyConnectorException;
+	
 }

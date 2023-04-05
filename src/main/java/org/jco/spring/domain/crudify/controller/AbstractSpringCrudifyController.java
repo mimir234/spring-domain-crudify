@@ -47,7 +47,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	protected ISpringCrudifyRepository<T> crudRepository;
 
 	@Inject
-	private Optional<ISpringCrudifyConnector<T>> crudConnector;
+	private Optional<ISpringCrudifyConnector<T, List<T>>> crudConnector;
 
 	protected Class<T> clazz;
 
