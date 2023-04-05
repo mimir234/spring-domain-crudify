@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * 
- * @author JérémyCOLOMBET
+ * @author Jérémy COLOMBET
  * 
  * This interface describes the methods that an entity musts have in order to be used by the library and processed. 
  * 

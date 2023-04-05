@@ -3,23 +3,25 @@
  *******************************************************************************/
 package org.jco.spring.domain.crudify.connector;
 
-import java.util.List;
+import java.util.concurrent.Future;
 
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
 public interface ISpringCrudifyConnector <T extends ISpringCrudifyEntity> {
 
 	public enum SpringCrudifyConnectorOperation {
-		CREATE, UPDATE, DELETE
-		
+		READ, CREATE, UPDATE, DELETE
 	}
 
-	public void publishEntity(String tenantId, String domain, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException;
-	
-	//Read methods
-
-	public T readEntity(String tenantId, String domain, String uuid) throws SpringCrudifyConnectorException;
-	
-	public List<T> readEntityList(String tenantId, String domain) throws SpringCrudifyConnectorException;
+	/**
+	 * 
+	 * @param tenantId
+	 * @param domain
+	 * @param object
+	 * @param operation
+	 * @return
+	 * @throws SpringCrudifyConnectorException
+	 */
+	public Future<T> publishEntity(String tenantId, String domain, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException;
 
 }

@@ -5,6 +5,10 @@ package org.jco.spring.domain.crudify.connector;
 
 public class SpringCrudifyConnectorException extends Exception {
 
+	public SpringCrudifyConnectorException(String string) {
+		super(string);
+	}
+
 	/**
 	 * 
 	 */

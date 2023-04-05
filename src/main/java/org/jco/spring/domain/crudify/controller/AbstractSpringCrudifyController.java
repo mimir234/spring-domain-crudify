@@ -50,11 +50,11 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 		T entity = null;
 		
 		if (this.crudConnector.isPresent()) {
-			try {
-				entity = this.crudConnector.get().readEntity(tenantId, domain, uuid);
-			} catch (SpringCrudifyConnectorException e) {
-				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.UNKNOWN_ERROR, "Entity does not exist", e); 
-			}
+//			try {
+//				entity = this.crudConnector.get().readEntity(tenantId, domain, uuid);
+//			} catch (SpringCrudifyConnectorException e) {
+//				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.UNKNOWN_ERROR, "Entity does not exist", e); 
+//			}
 		} else {
 			entity = this.crudRepository.getOneByUuid(tenantId, uuid);
 		}

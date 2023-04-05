@@ -159,7 +159,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 
 		if (this.AUTHORIZE_UPDATE) {
 			try {
-				entity.setId(uuid);
+				entity.setUuid(uuid);
 				T updatedEntity = this.crudController.updateEntity(tenantId, entity, this.domain);
 				response = new ResponseEntity<>(updatedEntity, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
