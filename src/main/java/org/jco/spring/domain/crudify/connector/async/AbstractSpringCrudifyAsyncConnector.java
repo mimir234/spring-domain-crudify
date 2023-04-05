@@ -40,7 +40,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 	private Map<String, SpringCrudifyAsyncConnectorPair<T>> receivedMessages = new HashMap<String, SpringCrudifyAsyncConnectorPair<T>>();
 
 	@Override
-	public Future<T> publishEntity(String tenantId, String domain, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+	public Future<T> request(String tenantId, String domain, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
 
 		log.info("[Tenant {}] Processing operation {} on domain {}", tenantId, operation, domain);
 		
@@ -73,7 +73,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 					receivedMessages.put(uuid, new SpringCrudifyAsyncConnectorPair<T>(locker, null));
 				}
 				
-				publishMessage(message);
+				publishRequest(message);
 				
 				if( log.isDebugEnabled() ) log.debug("Thread sleeping for {} {}", timeout, unit.toString());
 				
@@ -116,7 +116,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 
 	}
 
-	protected void onMessage(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException, JsonProcessingException {
+	protected void onResponse(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException, JsonProcessingException {
 		
 		log.info("[Tenant {}] Response received {}", message.getTenantId(), this.mapper.writeValueAsString(message));
 		
@@ -142,7 +142,6 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 	// Abstract methods below to be implemented by sub classes //
 	// -----------------------------------------------------------//
 
-	abstract public void publishMessage(SpringCrudifyAsyncConnectorEnvelop<T> message)
-			throws SpringCrudifyConnectorException;
+	abstract public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException;
 
 }

@@ -44,7 +44,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.publishEntity("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
 		
 		try {
 
@@ -82,7 +82,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.publishEntity("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
 		
 		TestEntity entityReponse = null;
 		try {
@@ -111,7 +111,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.publishEntity("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
 		
 		TestEntity entityReponse = null;
 		try {
@@ -143,7 +143,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		Exception exception = assertThrows(ExecutionException.class, () -> {
 	        
-			Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.publishEntity("1", "test",
+			Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test",
 					entity, SpringCrudifyConnectorOperation.READ);
 
 			TestEntity entityReponse = null;
@@ -168,7 +168,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 
 
 	@Override
-	public void publishMessage(SpringCrudifyAsyncConnectorEnvelop<TestEntity> message) throws SpringCrudifyConnectorException {
+	public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<TestEntity> message) throws SpringCrudifyConnectorException {
 		
 		Thread t = new Thread() {
 			
@@ -186,7 +186,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 						message.getOperation(), message.getEntity(), null, "Success");
 
 				try {
-					connector.onMessage(response);
+					connector.onResponse(response);
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
 //			e.printStackTrace();
