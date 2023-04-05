@@ -44,7 +44,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
 		
 		try {
 
@@ -82,7 +82,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
 		
 		TestEntity entityReponse = null;
 		try {
@@ -111,7 +111,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		TestEntity entity = new TestEntity("123456789", "123456789");
 		
-		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test", entity, SpringCrudifyConnectorOperation.READ);
+		Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
 		
 		TestEntity entityReponse = null;
 		try {
@@ -143,8 +143,7 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		
 		Exception exception = assertThrows(ExecutionException.class, () -> {
 	        
-			Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.request("1", "test",
-					entity, SpringCrudifyConnectorOperation.READ);
+			Future<TestEntity> response = TestAbstractSpringCrudifyAsyncConnector.connector.requestEntity("1", entity, SpringCrudifyConnectorOperation.READ);
 
 			TestEntity entityReponse = null;
 
@@ -199,4 +198,10 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		t.start();
 	}
 
+	@Override
+	public void setEntityClazz() {
+		this.clazz = TestEntity.class;
+	}
+
+	
 }

@@ -15,7 +15,7 @@ public interface ISpringCrudifyRepository<T> {
 
 	boolean doesExists(String tenantId, T entity);
 
-	List<T> getEntities(String tenantId);
+	List<T> getEntities(String tenantId, int pageSize, int pageIndex);
 
 	void save(String tenantId, T entity);
 
@@ -28,5 +28,9 @@ public interface ISpringCrudifyRepository<T> {
 	boolean doesExists(String tenantId, String id);
 
 	T getOneByUuid(String tenantId, String uuid);
+
+	Integer getTotalCount(String tenantId);
+	
+	void setEntityClazz();
 
 }

@@ -1,6 +1,9 @@
 package org.jco.spring.domain.crudify.connector.async;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -13,12 +16,14 @@ import javax.inject.Inject;
 import org.jco.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.jco.spring.domain.crudify.connector.SpringCrudifyConnectorException;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
+import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -39,10 +44,50 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 
 	private Map<String, SpringCrudifyAsyncConnectorPair<T>> receivedMessages = new HashMap<String, SpringCrudifyAsyncConnectorPair<T>>();
 
-	@Override
-	public Future<T> request(String tenantId, String domain, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+	protected Class<T> clazz;
 
-		log.info("[Tenant {}] Processing operation {} on domain {}", tenantId, operation, domain);
+	private String domain;
+
+	private ISpringCrudifyEntityFactory<T> factory;
+
+	@SuppressWarnings("unchecked")
+	@PostConstruct
+	private void getDomain() {
+		this.setEntityClazz();
+		Constructor<T> constructor;
+		try {
+
+			constructor = this.clazz.getConstructor();
+			T entity = (T) constructor.newInstance();
+			if (entity.getDomain().isEmpty()) {
+				this.domain = "unknown";
+			} else {
+				this.domain = entity.getDomain();
+			}
+
+			this.factory = (ISpringCrudifyEntityFactory<T>) entity.getFactory();
+
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+			this.domain = "unknown";
+			this.factory = null;
+		}
+	}
+	
+	@Override
+	public Future<List<T>> requestList(String tenantId, List<T> object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+		log.info("[Tenant {}] [Domain {}] Processing request entity list operation {} ", tenantId, this.domain, operation);
+		
+		
+		
+		
+		
+		return null;
+	}	
+	
+	@Override
+	public Future<T> requestEntity(String tenantId, T object, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException {
+		log.info("[Tenant {}] [Domain {}] Processing request entity operation {} ", tenantId, this.domain, operation);
 		
 		return this.executor.submit(new Callable<T>() {
 			
@@ -56,14 +101,15 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				
 				String uuid = UUID.randomUUID().toString();
 				String transactionUuid = uuid;
+				
 				Object locker = new Object();
 
 				SpringCrudifyAsyncConnectorEnvelop<T> message = new SpringCrudifyAsyncConnectorEnvelop<T>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, domain, null, operation,
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, object.getDomain(), null, operation,
 						object, null, null);
 				
 				try {
-					log.info("[Tenant {}] Sending request {}", tenantId, mapper.writeValueAsString(message));
+					log.info("[Tenant {}] [Domain {}] Sending request {}", tenantId, object.getDomain(), mapper.writeValueAsString(message));
 				} catch (JsonProcessingException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -100,7 +146,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				
 				if( pair.getEntity() == null ) {
 					try {
-						log.warn("[Tenant {}] no message received for message {}", tenantId, mapper.writeValueAsString(message));
+						log.warn("[Tenant {}] [Domain {}] no message received for message {}", tenantId, object.getDomain(), mapper.writeValueAsString(message));
 					} catch (JsonProcessingException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -118,7 +164,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 
 	protected void onResponse(SpringCrudifyAsyncConnectorEnvelop<T> message) throws SpringCrudifyConnectorException, JsonProcessingException {
 		
-		log.info("[Tenant {}] Response received {}", message.getTenantId(), this.mapper.writeValueAsString(message));
+		log.info("[Tenant {}] [Domain {}] Response received {}", message.getTenantId(), message.getEntity().getDomain(), this.mapper.writeValueAsString(message));
 		
 		String transactionUuid = message.getTransactionUuid();
 		
@@ -133,7 +179,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				pair.getLocker().notifyAll();
 			}
 		} else {
-			log.warn("[Tenant {}] Request with transaction id {} not found, dropping message", message.getTenantId(), message.getTransactionUuid());
+			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), message.getEntity().getDomain(), message.getTransactionUuid());
 		}
 		
 	}

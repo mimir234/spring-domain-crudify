@@ -28,6 +28,11 @@ public class SpringCrudifyEntityException extends Exception {
 		super(e);
 	}
 
+	public SpringCrudifyEntityException(int code, Exception e) {
+		super(e);
+		this.code = code;
+	}
+
 	/**
 	 * 
 	 */

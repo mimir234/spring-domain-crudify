@@ -14,6 +14,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * An entity should provide methods to set/get 
  *    - Uuid : unique Id used by the library
  *    - Id : an Id that is not unique 
+ *    
+ * An entity must provide its domain
  *
  */
 public interface ISpringCrudifyEntity {
@@ -27,5 +29,11 @@ public interface ISpringCrudifyEntity {
 	String getUuid(); 
 	
 	void setUuid(String uuid); 
-
+	
+	@JsonIgnore
+	String getDomain();
+	
+	@JsonIgnore
+	ISpringCrudifyEntityFactory<?> getFactory();
+	
 }
