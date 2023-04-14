@@ -18,4 +18,5 @@ public interface ISpringCrudifyDTOObject<T> {
 	 */
 	public void update(ISpringCrudifyDTOObject<T> object);
 
+
 }

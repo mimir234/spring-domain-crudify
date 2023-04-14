@@ -5,11 +5,10 @@ package org.jco.spring.domain.crudify.repository.dao;
 
 import java.util.List;
 
-import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.springframework.data.domain.Pageable;
 
-public interface ISpringCrudifyDAORepository<T extends ISpringCrudifyDTOObject<?>> {
+public interface ISpringCrudifyDAORepository<T> {
 
 	List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter);
 

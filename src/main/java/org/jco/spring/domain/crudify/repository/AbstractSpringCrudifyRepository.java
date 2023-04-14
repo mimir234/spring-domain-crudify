@@ -56,8 +56,8 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 			this.factory = null;
 		}
     }
-    
-    @Override
+
+	@Override
     public long getTotalCount(String tenantId) {
     	log.info("[Tenant {}] [Domain {}] Get Total Count.", tenantId, this.domain);
     	long totalCount = 0;

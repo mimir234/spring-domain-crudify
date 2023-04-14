@@ -5,6 +5,7 @@ package org.jco.spring.domain.crudify.repository;
 
 import java.util.List;
 
+import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 
 /**
@@ -13,7 +14,7 @@ import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
  *
  * @param <T>
  */
-public interface ISpringCrudifyRepository<T> {
+public interface ISpringCrudifyRepository<T extends ISpringCrudifyEntity> {
 
 	boolean doesExists(String tenantId, T entity);
 
