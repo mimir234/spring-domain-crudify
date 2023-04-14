@@ -17,15 +17,12 @@ import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings("rawtypes")
 @Slf4j
-@EnableMongoRepositories
 public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEntity, S extends AbstractSpringCrudifyDTOObject> implements ISpringCrudifyRepository<T> {
 	
 	@Inject
@@ -36,9 +33,6 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	private String domain;
 
 	private ISpringCrudifyEntityFactory<T> factory;
-	
-	@Inject
-	MongoTemplate template;
 	
     @SuppressWarnings("unchecked")
 	@PostConstruct
