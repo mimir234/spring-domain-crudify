@@ -3,6 +3,8 @@
  *******************************************************************************/
 package org.jco.spring.domain.crudify.repository.dto;
 
+import org.bson.BsonType;
+import org.bson.codecs.pojo.annotations.BsonRepresentation;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -22,7 +24,9 @@ public abstract class AbstractSpringCrudifyDTOObject<T> implements ISpringCrudif
 	
 	@Id
 	@Indexed(unique=true)
-	protected String uuid;
+	@Field
+	@BsonRepresentation(value = BsonType.STRING)
+	protected String techUuid;
 	
 	@Field
 	protected String id;

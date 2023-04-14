@@ -22,8 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
-import org.jco.spring.domain.crudify.connector.async.TestEntity;
-
 public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudifyAsyncConnector<TestEntity, List<TestEntity>>{
 
 	static TestAbstractSpringCrudifyAsyncConnector connector = new TestAbstractSpringCrudifyAsyncConnector();

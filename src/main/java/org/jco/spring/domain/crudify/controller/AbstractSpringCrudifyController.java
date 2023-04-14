@@ -19,6 +19,8 @@ import org.jco.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteralException;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * 
  */
 @Slf4j
-public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEntity>
-		implements ISpringCrudifyController<T> {
+public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEntity> implements ISpringCrudifyController<T> {
 
 	/**
 	 * The repository used to store the entity
@@ -153,9 +154,14 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public List<String> getEntityUuidList(String tenantId, int pageSize, int pageIndex)
+	public List<String> getEntityUuidList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter)
 			throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
+		try {
+			SpringCrudifyLiteral.validate(filter);
+		} catch (SpringCrudifyLiteralException e) {
+			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.BAD_REQUEST, e);
+		}
 		ArrayList<String> entityUuids = new ArrayList<String>();
 
 		List<T> entities = null;
@@ -174,7 +180,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
 		} else {
-			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex);
+			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex, filter);
 		}
 
 		entities.forEach(e -> {
@@ -185,11 +191,16 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public List<String> getEntityIdList(String tenantId, int pageSize, int pageIndex)
+	public List<String> getEntityIdList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter)
 			throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
 		ArrayList<String> entityUuids = new ArrayList<String>();
-
+		try {
+			SpringCrudifyLiteral.validate(filter);
+		} catch (SpringCrudifyLiteralException e) {
+			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.BAD_REQUEST, e);
+		}
+		
 		List<T> entities = null;
 
 		if (this.crudConnector.isPresent()) {
@@ -206,7 +217,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
 		} else {
-			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex);
+			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex, filter);
 		}
 
 		entities.forEach(e -> {
@@ -217,8 +228,13 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public List<T> getEntityFullList(String tenantId, int pageSize, int pageIndex) throws SpringCrudifyEntityException {
+	public List<T> getEntityFullList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
+		try {
+			SpringCrudifyLiteral.validate(filter);
+		} catch (SpringCrudifyLiteralException e) {
+			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.BAD_REQUEST, e);
+		}
 		List<T> entities = null;
 
 		if (this.crudConnector.isPresent()) {
@@ -235,7 +251,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
 		} else {
-			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex);
+			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex, filter);
 		}
 		return entities;
 	}
@@ -308,7 +324,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	@Override
 	public void deleteEntities(final String tenantId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Deleting all entities", tenantId, this.domain);
-		List<T> entities = this.crudRepository.getEntities(tenantId, 0, 1);
+		List<T> entities = this.crudRepository.getEntities(tenantId, 0, 1, null);
 
 		for (T s : entities) {
 			try {
@@ -321,7 +337,7 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public Integer getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException {
+	public long getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException {
 		return this.crudRepository.getTotalCount(tenantId);
 	}
 

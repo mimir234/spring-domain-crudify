@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 
 public interface ISpringCrudifyController<T extends ISpringCrudifyEntity> {
 
@@ -20,13 +21,13 @@ public interface ISpringCrudifyController<T extends ISpringCrudifyEntity> {
 
 	public T getEntity(String tenantId, String uuid) throws SpringCrudifyEntityException;
 
-	public List<String> getEntityUuidList(String tenantId, int pageSize, int pageIndex) throws SpringCrudifyEntityException;
+	public List<String> getEntityUuidList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
 
-	public List<String> getEntityIdList(String tenantId, int pageSize, int pageIndex) throws SpringCrudifyEntityException;
+	public List<String> getEntityIdList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
 
-	public List<T> getEntityFullList(String tenantId, int pageSize, int pageIndex) throws SpringCrudifyEntityException;
+	public List<T> getEntityFullList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
 
-	public Integer getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException;
+	public long getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException;
 	
 	public void setEntityClazz();
 	
