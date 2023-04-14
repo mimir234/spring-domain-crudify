@@ -6,15 +6,14 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
-import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
-import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteralException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-public abstract class AsbtractSpringCrudifyMongoRepository<T extends ISpringCrudifyDTOObject<?>>
+public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>>
 		implements ISpringCrudifyDAORepository<T> {
 
 	@Inject
