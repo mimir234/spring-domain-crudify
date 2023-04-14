@@ -7,9 +7,11 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.bson.BsonDocument;
 import org.jco.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -35,6 +40,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	protected static final String SUCCESSFULLY_DELETED = "Ressource has been successfully deleted";
 
 	protected static final String NOT_IMPLEMENTED = "This function is not implemented";
+	protected static final String FILTER_ERROR = "The filter has error";
 
 	protected boolean AUTHORIZE_CREATION = false;
 	protected boolean AUTHORIZE_GET_ALL = false;
@@ -60,7 +66,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	/**
 	 * Creates an entity.
 	 * 
-	 * @param 
+	 * @param
 	 * @return
 	 */
 	@RequestMapping(value = "", method = RequestMethod.POST)
@@ -90,23 +96,34 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	private ResponseEntity<?> getEntities(@RequestHeader String tenantId,
-			@RequestParam(value = "mode") SpringCrudifyReadOutputMode mode, @RequestParam(value="pageSize", defaultValue = "0") int pageSize, @RequestParam(value="pageIndex", defaultValue = "0") int pageIndex) {
+			@RequestParam(value = "mode") SpringCrudifyReadOutputMode mode,
+			@RequestParam(value = "pageSize", defaultValue = "0") int pageSize,
+			@RequestParam(value = "pageIndex", defaultValue = "0") int pageIndex,
+			@RequestParam(value = "filter", defaultValue = "") String filterString) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
 			Object entities = null;
+			
+			ObjectMapper mapper = new ObjectMapper();
+			SpringCrudifyLiteral filter = null;
+			try {
+				filter = mapper.readValue(filterString, SpringCrudifyLiteral.class);
+			} catch (JsonProcessingException e) {
+				new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.BAD_REQUEST);
+			}
 
 			try {
 				switch (mode) {
 				default:
 				case uuid:
-					entities = this.crudController.getEntityUuidList(tenantId, pageSize, pageIndex);
+					entities = this.crudController.getEntityUuidList(tenantId, pageSize, pageIndex, filter);
 					break;
 				case id:
-					entities = this.crudController.getEntityIdList(tenantId, pageSize, pageIndex);
+					entities = this.crudController.getEntityIdList(tenantId, pageSize, pageIndex, filter);
 					break;
 				case full:
-					entities = this.crudController.getEntityFullList(tenantId, pageSize, pageIndex);
+					entities = this.crudController.getEntityFullList(tenantId, pageSize, pageIndex, filter);
 					break;
 				}
 
@@ -114,18 +131,18 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
 			}
-			
-			if( pageSize > 0 ) {
-				Integer totalCount = 0;
+
+			if (pageSize > 0) {
+				long totalCount = 0;
 				try {
 					totalCount = this.crudController.getEntityTotalCount(tenantId);
 				} catch (SpringCrudifyEntityException e) {
 					return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 							this.getHttpErrorCodeFromEntityExceptionCode(e));
 				}
-				
+
 				SpringCrudifyWsPage page = new SpringCrudifyWsPage(totalCount, ((List<Object>) entities));
-				
+
 				return new ResponseEntity<>(page, HttpStatus.OK);
 			} else {
 				return new ResponseEntity<>(entities, HttpStatus.OK);
@@ -241,9 +258,9 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 			return new ResponseEntity<>(new ISpringCrudifyErrorObject(NOT_IMPLEMENTED), HttpStatus.NOT_IMPLEMENTED);
 		}
 	}
-	
+
 	/**
-	 * Get count of entities 
+	 * Get count of entities
 	 * 
 	 * @return
 	 */
@@ -254,7 +271,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 			ResponseEntity<?> response = null;
 
 			try {
-				Integer count = this.crudController.getEntityTotalCount(tenantId);
+				long count = this.crudController.getEntityTotalCount(tenantId);
 				response = new ResponseEntity<>(count, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),

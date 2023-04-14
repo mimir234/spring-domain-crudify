@@ -14,8 +14,10 @@ import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import jakarta.annotation.PostConstruct;
@@ -34,7 +36,10 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	private String domain;
 
 	private ISpringCrudifyEntityFactory<T> factory;
-
+	
+	@Inject
+	MongoTemplate template;
+	
     @SuppressWarnings("unchecked")
 	@PostConstruct
     private void getDomain() {
@@ -59,9 +64,9 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
     }
     
     @Override
-    public Integer getTotalCount(String tenantId) {
+    public long getTotalCount(String tenantId) {
     	log.info("[Tenant {}] [Domain {}] Get Total Count.", tenantId, this.domain);
-    	Integer totalCount = 0;
+    	long totalCount = 0;
     	
     	totalCount = this.daoRepository.countByTenantId(tenantId);
     	
@@ -86,31 +91,32 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
  
 		S object = this.convertToDTOObject(tenantId, entity);
 		
-		log.info("[Tenant {}] [Domain {}] Checking if entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
+		log.info("[Tenant {}] [Domain {}] Checking if entity with uuid "+object.getTechUuid()+" exists.", tenantId, this.domain);
 		
 		if( this.daoRepository.findOneByUuidAndTenantId(object.getId(), object.getTenantId()) != null ){
-			log.info("[Tenant "+tenantId+"] Entity with uuid "+object.getUuid()+" exists.");
+			log.info("[Tenant "+tenantId+"] Entity with uuid "+object.getTechUuid()+" exists.");
 			return true;
 		} 
-		log.info("[Tenant {}] [Domain {}] Entity with uuid "+object.getUuid()+" does not exists.", tenantId, this.domain);
+		log.info("[Tenant {}] [Domain {}] Entity with uuid "+object.getTechUuid()+" does not exists.", tenantId, this.domain);
 		return false;
 	}
 
 
 	@Override
-	public List<T> getEntities(String tenantId, int pageSize, int pageIndex) {
+	public List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral  filter) {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
 
 		List<T> entities = new ArrayList<T>();
 		List<S> objects = null;
-		
-		if( pageSize == 0 ) {
-			objects = this.daoRepository.findByTenantId(tenantId);
-		} else {
-			Pageable page = PageRequest.of(pageIndex, pageSize);
-			objects = this.daoRepository.findByTenantId(tenantId, page);
-		}
-		
+
+		Pageable page = null; 
+				
+		if( pageSize > 0 ) {
+			page = PageRequest.of(pageIndex, pageSize);
+		} 
+			
+		objects = this.daoRepository.findByTenantId(tenantId, page, filter);
+	
 		objects.forEach(s ->{
 			entities.add(this.convertToEntity(s));
 		});
@@ -121,7 +127,7 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	@Override
 	public void save(String tenantId, T entity) {
 		S object = this.convertToDTOObject(tenantId, entity);
-		log.info("[Tenant {}] [Domain {}] Saving entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
+		log.info("[Tenant {}] [Domain {}] Saving entity with uuid "+object.getTechUuid()+" exists.", tenantId, this.domain);
 
 		this.daoRepository.save( object );
 		
@@ -132,8 +138,8 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 		
 		S object = this.convertToDTOObject(tenantId, entity);
 		
-		S objectToBeUpdated = this.daoRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId());
-		log.info("[Tenant {}] [Domain {}] Updating entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
+		S objectToBeUpdated = this.daoRepository.findOneByUuidAndTenantId(object.getTechUuid(), object.getTenantId());
+		log.info("[Tenant {}] [Domain {}] Updating entity with uuid "+object.getTechUuid()+" exists.", tenantId, this.domain);
 		
 		if( objectToBeUpdated != null ){
 			
@@ -180,7 +186,7 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	@Override
 	public void delete(String tenantId, T entity) {
 		S object = this.convertToDTOObject(tenantId, entity);
-		log.info("[Tenant {}] [Domain {}] Deleting entity with Uuid "+object.getUuid(), tenantId, this.domain);
+		log.info("[Tenant {}] [Domain {}] Deleting entity with Uuid "+object.getTechUuid(), tenantId, this.domain);
 		
 		this.daoRepository.delete(object);
 	}

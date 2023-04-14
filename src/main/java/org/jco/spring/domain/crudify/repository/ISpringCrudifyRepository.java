@@ -5,6 +5,8 @@ package org.jco.spring.domain.crudify.repository;
 
 import java.util.List;
 
+import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+
 /**
  * 
  * @author JérémyCOLOMBET
@@ -15,7 +17,7 @@ public interface ISpringCrudifyRepository<T> {
 
 	boolean doesExists(String tenantId, T entity);
 
-	List<T> getEntities(String tenantId, int pageSize, int pageIndex);
+	List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter);
 
 	void save(String tenantId, T entity);
 
@@ -29,7 +31,7 @@ public interface ISpringCrudifyRepository<T> {
 
 	T getOneByUuid(String tenantId, String uuid);
 
-	Integer getTotalCount(String tenantId);
+	long getTotalCount(String tenantId);
 	
 	void setEntityClazz();
 
