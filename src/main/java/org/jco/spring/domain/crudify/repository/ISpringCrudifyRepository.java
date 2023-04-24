@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
 
 /**
  * 
@@ -18,7 +19,7 @@ public interface ISpringCrudifyRepository<T extends ISpringCrudifyEntity> {
 
 	boolean doesExists(String tenantId, T entity);
 
-	List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter);
+	List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort);
 
 	void save(String tenantId, T entity);
 

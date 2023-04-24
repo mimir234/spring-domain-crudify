@@ -7,11 +7,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.bson.BsonDocument;
 import org.jco.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.jco.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -96,10 +97,11 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	private ResponseEntity<?> getEntities(@RequestHeader String tenantId,
-			@RequestParam(value = "mode") SpringCrudifyReadOutputMode mode,
+			@RequestParam(value = "mode", defaultValue = "full") SpringCrudifyReadOutputMode mode,
 			@RequestParam(value = "pageSize", defaultValue = "0") int pageSize,
 			@RequestParam(value = "pageIndex", defaultValue = "0") int pageIndex,
-			@RequestParam(value = "filter", defaultValue = "") String filterString) {
+			@RequestParam(value = "filter", defaultValue = "") String filterString,
+			@RequestParam(value = "sort", defaultValue = "") String sortString) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
@@ -107,26 +109,20 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 			
 			ObjectMapper mapper = new ObjectMapper();
 			SpringCrudifyLiteral filter = null;
+			SpringCrudifySort sort = null;
 			try {
-				filter = mapper.readValue(filterString, SpringCrudifyLiteral.class);
+				if( filterString != null && !filterString.isEmpty() ) {
+					filter = mapper.readValue(filterString, SpringCrudifyLiteral.class);
+				}
+				if( sortString != null && !sortString.isEmpty() ) {
+					sort = mapper.readValue(sortString, SpringCrudifySort.class);
+				}
 			} catch (JsonProcessingException e) {
-				new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject("Error parsing request param : "+e.getMessage()), HttpStatus.BAD_REQUEST);
 			}
 
 			try {
-				switch (mode) {
-				default:
-				case uuid:
-					entities = this.crudController.getEntityUuidList(tenantId, pageSize, pageIndex, filter);
-					break;
-				case id:
-					entities = this.crudController.getEntityIdList(tenantId, pageSize, pageIndex, filter);
-					break;
-				case full:
-					entities = this.crudController.getEntityFullList(tenantId, pageSize, pageIndex, filter);
-					break;
-				}
-
+				entities = this.crudController.getEntityList(tenantId, pageSize, pageIndex, filter, sort, mode);
 			} catch (SpringCrudifyEntityException e) {
 				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));

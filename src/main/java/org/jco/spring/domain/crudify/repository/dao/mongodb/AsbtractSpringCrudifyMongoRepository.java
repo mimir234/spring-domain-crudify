@@ -8,8 +8,12 @@ import javax.inject.Inject;
 import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -25,7 +29,7 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 	}
 
 	@Override
-	public List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter) {
+	public List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
 		List<T> results = new ArrayList<>();
 
 		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId));
@@ -38,7 +42,16 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 		if (pageable != null) {
 			query.with(pageable);
 		}
-
+		
+		if( sort != null ) {
+			Direction direction = null;
+			switch(sort.getDirection()) {
+			case asc -> {direction = Sort.Direction.ASC;}
+			case desc -> {direction = Sort.Direction.DESC;}
+			}
+			query.with(Sort.by(direction, sort.getFieldName()));
+		}
+		
 		results = this.mongo.find(query, this.getDTOClass());
 
 		return results;

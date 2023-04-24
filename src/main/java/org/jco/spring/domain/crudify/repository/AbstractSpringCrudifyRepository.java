@@ -15,6 +15,7 @@ import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObje
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
+import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -103,7 +104,7 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 
 
 	@Override
-	public List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral  filter) {
+	public List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
 
 		List<T> entities = new ArrayList<T>();
@@ -115,7 +116,7 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 			page = PageRequest.of(pageIndex, pageSize);
 		} 
 			
-		objects = this.daoRepository.findByTenantId(tenantId, page, filter);
+		objects = this.daoRepository.findByTenantId(tenantId, page, filter, sort);
 	
 		objects.forEach(s ->{
 			entities.add(this.convertToEntity(s));
