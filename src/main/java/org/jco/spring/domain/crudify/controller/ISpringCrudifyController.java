@@ -23,7 +23,7 @@ public interface ISpringCrudifyController<T extends ISpringCrudifyEntity> {
 
 	public T getEntity(String tenantId, String uuid) throws SpringCrudifyEntityException;
 
-	public long getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException;
+	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
 	
 	public void setEntityClazz();
 

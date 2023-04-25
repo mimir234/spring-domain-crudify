@@ -275,8 +275,8 @@ public abstract class AbstractSpringCrudifyController<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public long getEntityTotalCount(String tenantId) throws SpringCrudifyEntityException {
-		return this.crudRepository.getTotalCount(tenantId);
+	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException {
+		return this.crudRepository.getCount(tenantId, filter);
 	}
 
 	// -----------------------------------------------------------//
