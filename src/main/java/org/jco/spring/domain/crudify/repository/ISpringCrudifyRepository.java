@@ -33,7 +33,7 @@ public interface ISpringCrudifyRepository<T extends ISpringCrudifyEntity> {
 
 	T getOneByUuid(String tenantId, String uuid);
 
-	long getTotalCount(String tenantId);
+	long getCount(String tenantId, SpringCrudifyLiteral filter);
 	
 	void setEntityClazz();
 

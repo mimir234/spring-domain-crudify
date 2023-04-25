@@ -131,7 +131,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 			if (pageSize > 0) {
 				long totalCount = 0;
 				try {
-					totalCount = this.crudController.getEntityTotalCount(tenantId);
+					totalCount = this.crudController.getEntityTotalCount(tenantId, filter);
 				} catch (SpringCrudifyEntityException e) {
 					return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 							this.getHttpErrorCodeFromEntityExceptionCode(e));
@@ -260,14 +260,14 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/count", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	private ResponseEntity<?> getCount(@RequestHeader String tenantId) {
 
 		if (this.AUTHORIZE_COUNT) {
 			ResponseEntity<?> response = null;
 
 			try {
-				long count = this.crudController.getEntityTotalCount(tenantId);
+				long count = this.crudController.getEntityTotalCount(tenantId, null);
 				response = new ResponseEntity<>(count, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),

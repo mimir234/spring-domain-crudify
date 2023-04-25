@@ -65,11 +65,11 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
     }
 
 	@Override
-    public long getTotalCount(String tenantId) {
-    	log.info("[Tenant {}] [Domain {}] Get Total Count.", tenantId, this.domain);
+    public long getCount(String tenantId, SpringCrudifyLiteral filter) {
+    	log.info("[Tenant {}] [Domain {}] Get Total Count, Filter {}", tenantId, this.domain, filter);
     	long totalCount = 0;
     	
-    	totalCount = this.daoRepository.countByTenantId(tenantId);
+    	totalCount = this.daoRepository.countByTenantId(tenantId, filter);
     	
     	return totalCount;
     }

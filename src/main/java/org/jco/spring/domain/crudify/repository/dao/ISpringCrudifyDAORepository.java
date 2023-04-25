@@ -21,6 +21,6 @@ public interface ISpringCrudifyDAORepository<T> {
 
 	void delete(T object);
 	
-	long countByTenantId(String tenantId);
+	long countByTenantId(String tenantId, SpringCrudifyLiteral filter);
 	
 }

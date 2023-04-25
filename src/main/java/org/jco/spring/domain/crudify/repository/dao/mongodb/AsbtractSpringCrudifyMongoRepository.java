@@ -153,8 +153,16 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 	}
 
 	@Override
-	public long countByTenantId(String tenantId) {
-		return this.mongo.count(new Query().addCriteria(Criteria.where("tenantId").is(tenantId)), this.getDTOClass());
+	public long countByTenantId(String tenantId, SpringCrudifyLiteral filter) {
+		
+		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId));
+
+		if (filter != null) {
+			Criteria criteria = AsbtractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
+			query.addCriteria(criteria);
+		}
+		
+		return this.mongo.count(query, this.getDTOClass());
 	}
 
 	protected abstract Class<T> getDTOClass();
