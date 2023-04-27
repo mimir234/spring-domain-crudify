@@ -13,28 +13,29 @@ import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
  * 
  * @author JérémyCOLOMBET
  *
- * @param <T>
+ * @param <Entity>
  */
-public interface ISpringCrudifyRepository<T extends ISpringCrudifyEntity> {
+public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity> {
 
-	boolean doesExists(String tenantId, T entity);
+	boolean doesExists(String tenantId, Entity entity);
 
-	List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort);
+	List<Entity> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter,
+			SpringCrudifySort sort);
 
-	void save(String tenantId, T entity);
+	void save(String tenantId, Entity entity);
 
-	T update(String tenantId, T entity);
+	Entity update(String tenantId, Entity entity);
 
-	T getOneById(String tenantId, String id);
+	Entity getOneById(String tenantId, String id);
 
-	void delete(String tenantId, T entity);
-	
+	void delete(String tenantId, Entity entity);
+
 	boolean doesExists(String tenantId, String uuid);
 
-	T getOneByUuid(String tenantId, String uuid);
+	Entity getOneByUuid(String tenantId, String uuid);
 
 	long getCount(String tenantId, SpringCrudifyLiteral filter);
-	
-	void setEntityClazz();
+
+	Class<Entity> getEntityClass();
 
 }

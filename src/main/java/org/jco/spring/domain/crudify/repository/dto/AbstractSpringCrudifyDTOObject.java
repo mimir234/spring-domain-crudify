@@ -3,6 +3,7 @@
  *******************************************************************************/
 package org.jco.spring.domain.crudify.repository.dto;
 
+import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -14,11 +15,11 @@ import lombok.Getter;
  * 
  * @author J.Colombet
  *
- * @param <T>
+ * @param <Entity>
  */
 @Data
 @Getter
-public abstract class AbstractSpringCrudifyDTOObject<T> implements ISpringCrudifyDTOObject<T> {
+public abstract class AbstractSpringCrudifyDTOObject<Entity extends ISpringCrudifyEntity> implements ISpringCrudifyDTOObject<Entity> {
 	
 	@Id
 	@Indexed(unique=true)
@@ -30,11 +31,10 @@ public abstract class AbstractSpringCrudifyDTOObject<T> implements ISpringCrudif
 	@Field
 	protected String tenantId;
 
-	public AbstractSpringCrudifyDTOObject() {
-		
+	protected AbstractSpringCrudifyDTOObject() {
 	}
 
-	public AbstractSpringCrudifyDTOObject(String tenantId, T entity){
+	protected AbstractSpringCrudifyDTOObject(String tenantId, Entity entity){
 		this.tenantId = tenantId;
 		this.create(entity);
 	}

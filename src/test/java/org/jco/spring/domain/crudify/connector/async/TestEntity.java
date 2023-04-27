@@ -32,7 +32,7 @@ public class TestEntity implements ISpringCrudifyEntity {
 	}
 
 	@Override
-	public ISpringCrudifyEntityFactory<?> getFactory() {
+	public ISpringCrudifyEntityFactory<TestEntity> getFactory() {
 		return new ISpringCrudifyEntityFactory<TestEntity>() {
 
 			@Override
