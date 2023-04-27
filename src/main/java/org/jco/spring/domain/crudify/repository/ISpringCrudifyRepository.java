@@ -29,7 +29,7 @@ public interface ISpringCrudifyRepository<T extends ISpringCrudifyEntity> {
 
 	void delete(String tenantId, T entity);
 	
-	boolean doesExists(String tenantId, String id);
+	boolean doesExists(String tenantId, String uuid);
 
 	T getOneByUuid(String tenantId, String uuid);
 

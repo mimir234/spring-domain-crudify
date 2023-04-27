@@ -26,8 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.security.RolesAllowed;
 
 /**
  * 
@@ -35,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @param <T>
  */
-@Slf4j
 public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntity> {
 
 	protected static final String SUCCESSFULLY_DELETED = "Ressource has been successfully deleted";
@@ -60,9 +58,6 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 
 	@Inject
 	private ISpringCrudifyController<T> crudController;
-
-	@Getter
-	protected String domain;
 
 	/**
 	 * Creates an entity.
