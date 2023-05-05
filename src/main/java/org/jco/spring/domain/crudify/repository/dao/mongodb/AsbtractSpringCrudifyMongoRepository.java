@@ -9,11 +9,11 @@ import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -22,6 +22,9 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 
 	@Inject
 	private MongoTemplate mongo;
+	
+	@Value("${spring.domain.crudify.magicTenantId}")
+	private String magicTenantId;
 
 	@Override
 	public T save(T object) {
@@ -32,7 +35,11 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 	public List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
 		List<T> results = new ArrayList<>();
 
-		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId));
+		Query query = new Query();
+		
+		if( !tenantId.equals(this.magicTenantId) ) {
+			query.addCriteria(Criteria.where("tenantId").is(tenantId));
+		}
 
 		if (filter != null) {
 			Criteria criteria = AsbtractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
@@ -136,13 +143,29 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 
 	@Override
 	public T findOneByUuidAndTenantId(String uuid, String tenantId) {
-		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId).and("uuid").is(uuid));
+	
+		Query query = new Query();
+		
+		if( !tenantId.equals(this.magicTenantId) ) {
+			query.addCriteria(Criteria.where("tenantId").is(tenantId).and("uuid").is(uuid));
+		} else {
+			query.addCriteria(Criteria.where("uuid").is(uuid));
+		}
+		
 		return this.mongo.findOne(query, this.getDTOClass());
 	}
 
 	@Override
 	public T findOneByIdAndTenantId(String id, String tenantId) {
-		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId).and("id").is(id));
+		
+		Query query = new Query();
+		
+		if( !tenantId.equals(this.magicTenantId) ) {
+			query.addCriteria(Criteria.where("tenantId").is(tenantId).and("id").is(id));
+		} else {
+			query.addCriteria(Criteria.where("id").is(id));
+		}
+		
 		return this.mongo.findOne(query, this.getDTOClass());
 	}
 
@@ -155,7 +178,11 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 	@Override
 	public long countByTenantId(String tenantId, SpringCrudifyLiteral filter) {
 		
-		Query query = new Query().addCriteria(Criteria.where("tenantId").is(tenantId));
+		Query query = new Query();
+		
+		if( !tenantId.equals(this.magicTenantId) ) {
+			query.addCriteria(Criteria.where("tenantId").is(tenantId));
+		}
 
 		if (filter != null) {
 			Criteria criteria = AsbtractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
