@@ -56,7 +56,7 @@ public abstract class AbstractSpringCrudifyService<T extends ISpringCrudifyEntit
 	}
 
 	@Inject
-	private ISpringCrudifyController<T> crudController;
+	protected ISpringCrudifyController<T> crudController;
 
 	/**
 	 * Creates an entity.
