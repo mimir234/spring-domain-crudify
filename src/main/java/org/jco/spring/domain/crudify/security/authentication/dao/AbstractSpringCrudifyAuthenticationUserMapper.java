@@ -5,7 +5,7 @@ import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-public abstract class AbstractSpringCrudifyDaoAuthenticationUserMapper<UserEntity extends ISpringCrudifyEntity> implements ISpringCrudifyDaoAuthenticationUserMapper {
+public abstract class AbstractSpringCrudifyAuthenticationUserMapper<UserEntity extends ISpringCrudifyEntity> implements ISpringCrudifyAuthenticationUserMapper {
 
 	@Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {

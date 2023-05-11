@@ -55,6 +55,7 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	private String domain;
 
 	private ISpringCrudifyEntityFactory<Entity> factory;
+	
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct

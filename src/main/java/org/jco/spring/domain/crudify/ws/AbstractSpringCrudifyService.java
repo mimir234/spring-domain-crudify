@@ -96,9 +96,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 		this.defineAuthorizations();
 	}
 
-	@Bean("authorizations")
-	@ConditionalOnProperty(name = "spring.domain.crudify.security", havingValue = "enabled", matchIfMissing = true)
-	private List<ISpringCrudifyAuthorization> createAuthorizations() {
+	public List<ISpringCrudifyAuthorization> createAuthorizations() {
 		List<ISpringCrudifyAuthorization> authorizations = new ArrayList<ISpringCrudifyAuthorization>();
 		
 		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-read-all", HttpMethod.GET ));

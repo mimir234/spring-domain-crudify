@@ -4,6 +4,7 @@ import org.jco.spring.domain.crudify.security.authentication.ISpringAuthenticati
 import org.jco.spring.domain.crudify.security.authentication.SpringCrudifyAuthenticationMode;
 import org.jco.spring.domain.crudify.security.authentication.modes.loginpassword.SpringCrudifyLoginPasswordAuthenticationRequest;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationProvider;
+import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyExpiredException;
 import org.jco.spring.domain.crudify.ws.ISpringCrudifyErrorObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +52,12 @@ public class SpringCrudifyAuthenticationRestService {
 		
         if (authentication.isAuthenticated()) {
         	
-        	String authorization = this.authorizationProvider.getAuthorization(authentication);
+        	String authorization;
+			try {
+				authorization = this.authorizationProvider.getAuthorization(authentication);
+			} catch (SpringCrudifyKeyExpiredException e) {
+				return new ResponseEntity<>("Error during authorization creation", HttpStatus.INTERNAL_SERVER_ERROR);
+			}
         	
         	return new ResponseEntity<>(authorization, HttpStatus.CREATED);
         	

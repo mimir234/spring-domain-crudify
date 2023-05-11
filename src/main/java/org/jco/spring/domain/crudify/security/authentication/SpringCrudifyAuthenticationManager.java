@@ -1,10 +1,8 @@
 package org.jco.spring.domain.crudify.security.authentication;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 
-import org.jco.spring.domain.crudify.security.authentication.dao.ISpringCrudifyDaoAuthenticationUserMapper;
+import org.jco.spring.domain.crudify.security.authentication.dao.ISpringCrudifyAuthenticationUserMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +22,7 @@ import org.springframework.stereotype.Service;
 public class SpringCrudifyAuthenticationManager implements ISpringCrudifyAuthenticationManager {
 
 	@Inject
-	private Optional<ISpringCrudifyDaoAuthenticationUserMapper> userMapper;
+	private ISpringCrudifyAuthenticationUserMapper userMapper;
 	
 	@Value("${spring.domain.crudify.security.authentication.type}")
 	private SpringCrudifyAuthenticationType authenticationType;
@@ -53,7 +51,7 @@ public class SpringCrudifyAuthenticationManager implements ISpringCrudifyAuthent
 		default:
 		case dao:
 			provider = new DaoAuthenticationProvider();
-			((DaoAuthenticationProvider) provider).setUserDetailsService(this.userMapper.orElseThrow(() -> new ISpringCrudifySecurityException("No ISpringCrudifyDaoAuthenticationUserMapper bean provided")));
+			((DaoAuthenticationProvider) provider).setUserDetailsService(this.userMapper);
 			((DaoAuthenticationProvider) provider).setPasswordEncoder(this.getPasswordEncoder());
 			break;
 		}
@@ -70,7 +68,7 @@ public class SpringCrudifyAuthenticationManager implements ISpringCrudifyAuthent
 				.authenticationProvider(authenticationProvider())
 				.authorizeHttpRequests().and()
 				.sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and();
 		} catch (Exception e) {
 			new ISpringCrudifySecurityException(e);
 		}

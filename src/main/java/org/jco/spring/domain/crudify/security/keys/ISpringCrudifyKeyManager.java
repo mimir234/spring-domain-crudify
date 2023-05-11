@@ -6,9 +6,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 public interface ISpringCrudifyKeyManager {
 	
-	Key getKeyForCiphering(String realm);
+	Key getKeyForCiphering(String realm) throws SpringCrudifyKeyExpiredException;
 	
-	Key getKeyForUnciphering(String realm);
+	Key getKeyForUnciphering(String realm) throws SpringCrudifyKeyExpiredException;
 	
 	void renew(String realm);
 	

@@ -1,12 +1,17 @@
 package org.jco.spring.domain.crudify.security;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifyAuthenticationManager;
 import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifySecurityException;
+import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
+import org.jco.spring.domain.crudify.ws.AbstractSpringCrudifyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.stereotype.Service;
@@ -25,8 +30,20 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	@Inject
 	private Optional<ISpringCrudifyAuthorizationManager> authorizationManager;
 	
+	@Autowired
+	private List<AbstractSpringCrudifyService<?>> services;
+	
 	@Override
 	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
+		
+		getAuthorizations().forEach(a -> {
+			try {
+				http.authorizeHttpRequests().requestMatchers(a.getHttpMethod(), a.getEndpoint()).hasAnyAuthority(a.getRole());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		});
 
 		this.authenticationManager.ifPresent(a -> {
 			try {
@@ -48,6 +65,18 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 
 		return http;
 
+	}
+
+	@Override
+	public List<ISpringCrudifyAuthorization> getAuthorizations() {
+		List<ISpringCrudifyAuthorization> authorizations = new ArrayList<ISpringCrudifyAuthorization>();
+		
+		this.services.forEach(service -> {
+			List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
+			authorizations.addAll(serviceAuthorizations);
+		});
+		
+		return authorizations;
 	}
 
 }
