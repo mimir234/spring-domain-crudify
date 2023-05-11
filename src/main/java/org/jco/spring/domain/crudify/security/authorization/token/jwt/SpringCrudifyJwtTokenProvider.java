@@ -1,0 +1,100 @@
+package org.jco.spring.domain.crudify.security.authorization.token.jwt;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.jco.spring.domain.crudify.security.authentication.dao.AbstractSpringCrudifyUserDetails;
+import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationProvider;
+import org.jco.spring.domain.crudify.security.keys.ISpringCrudifyKeyManager;
+import org.jco.spring.domain.crudify.security.keys.SpringCrudifyInMemoryKeyManager;
+import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyExpiration;
+import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyManagerType;
+import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyRenewal;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+
+import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.annotation.PostConstruct;
+
+public class SpringCrudifyJwtTokenProvider implements ISpringCrudifyAuthorizationProvider {
+
+	private ISpringCrudifyKeyManager keyManager;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.manager}")
+	private SpringCrudifyKeyManagerType keyManagerType;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.algorithm}")
+	private String keyAlgorythm;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.realm}")
+	private String keyRealm;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.renewal}")
+	private SpringCrudifyKeyRenewal keyRenewal;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.lifetime}")
+	private long keyLifetime;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.jwt.key.lifetime.unit}")
+	private TimeUnit keyLifetimeUnit;
+	
+	@Value("${spring.domain.crudify.security.authorization.token.lifetime}")
+	private int tokenLifetime;
+	
+	@PostConstruct
+	private void init() {
+		switch(this.keyManagerType) {
+		default:
+		case inmemory:
+			this.keyManager = new SpringCrudifyInMemoryKeyManager();
+			break;
+		case db:
+			break;
+		}
+		if( this.keyLifetime == 0) {
+			this.keyManager.createRealm(this.keyRealm, SignatureAlgorithm.forName(this.keyAlgorythm));
+		} else {
+			SpringCrudifyKeyExpiration expiration = new SpringCrudifyKeyExpiration(this.keyLifetime, this.keyLifetimeUnit);
+			this.keyManager.createRealm(this.keyRealm, SignatureAlgorithm.forName(this.keyAlgorythm), expiration);
+		}
+	}
+	
+	@Override
+	public String getAuthorization(Authentication authentication) {
+		AbstractSpringCrudifyUserDetails principal = (AbstractSpringCrudifyUserDetails) authentication.getPrincipal();
+		return this.generateToken(principal.getUsername(), principal.getTenantId(), principal.getUuid());
+	}
+
+    public String generateToken(String userName, String tenantId, String uuid){
+        Map<String,Object> claims = new HashMap<>();
+        claims.put("tenantId", tenantId);
+        claims.put("uuid", uuid);
+        return createToken(claims, userName);
+    }
+
+    private String createToken(Map<String, Object> claims, String userName) {
+    	Key key = this.keyManager.getKeyForCiphering(this.keyRealm);
+    	
+    	Date now = new Date();
+    	
+    	JwtBuilder token = Jwts.builder()
+                .setClaims(claims)
+                .setSubject(userName)
+                .setIssuedAt(now)
+                .signWith(key, SignatureAlgorithm.forSigningKey(key));
+    	
+    	if( this.tokenLifetime != 0 ) {
+    		long expirationDate = now.getTime() + TimeUnit.MINUTES.toMillis(this.tokenLifetime);
+    		token.setExpiration(new Date(expirationDate));
+    	}
+    	return token.compact();
+    }
+
+
+}
