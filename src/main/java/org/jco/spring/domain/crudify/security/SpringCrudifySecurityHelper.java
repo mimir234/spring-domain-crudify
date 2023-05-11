@@ -10,10 +10,13 @@ import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifyAuthe
 import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifySecurityException;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
+import org.jco.spring.domain.crudify.security.authorization.bearer.SpringCrudifyBearerAuthorizationExtractor;
+import org.jco.spring.domain.crudify.security.tenants.SpringCrudifyTenantVerifier;
 import org.jco.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Service;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -32,6 +35,9 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	
 	@Autowired
 	private List<AbstractSpringCrudifyService<?>> services;
+	
+	@Autowired
+	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
 	
 	@Override
 	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
@@ -60,6 +66,14 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 			} catch (ISpringCrudifySecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+		});
+		
+		this.tenantVerifier.ifPresent(t -> {
+			try {
+				http.authorizeHttpRequests().and().addFilterAfter(t, UsernamePasswordAuthenticationFilter.class);
+			} catch (Exception e) {
+				
 			}
 		});
 

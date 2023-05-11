@@ -2,6 +2,7 @@ package org.jco.spring.domain.crudify.security.authorization.bearer;
 
 import java.io.IOException;
 
+import org.jco.spring.domain.crudify.security.authentication.dao.AbstractSpringCrudifyUserDetails;
 import org.jco.spring.domain.crudify.security.authentication.dao.ISpringCrudifyAuthenticationUserMapper;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationProvider;
 import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyExpiredException;
@@ -39,11 +40,15 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userMapper.loadUserByUsername(username);
+        	AbstractSpringCrudifyUserDetails userDetails = (AbstractSpringCrudifyUserDetails) this.userMapper.loadUserByUsername(username);
             try {
 				if (this.authorizationProvider.validateAuthorization(token, userDetails)) {
 				    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+				    
+				    request.setAttribute("tenantId", userDetails.getTenantId());
+				    			    
 				    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				    
 				    SecurityContextHolder.getContext().setAuthentication(authToken);
 				}
 			} catch (SpringCrudifyKeyExpiredException e) {
