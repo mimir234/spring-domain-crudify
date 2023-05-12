@@ -19,8 +19,6 @@ import org.jco.spring.domain.crudify.spec.SpringCrudifyEntityException;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,9 +59,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 
 	protected abstract void defineAuthorizations();
 	
+	protected abstract List<ISpringCrudifyAuthorization> createCustomAuthorizations();
+	
 	private String domain;
 
 	private ISpringCrudifyEntityFactory<Entity> factory;
+
+	private ArrayList<ISpringCrudifyAuthorization> authorizations;
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
@@ -97,21 +99,25 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	}
 
 	public List<ISpringCrudifyAuthorization> createAuthorizations() {
-		List<ISpringCrudifyAuthorization> authorizations = new ArrayList<ISpringCrudifyAuthorization>();
-		
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-read-all", HttpMethod.GET ));
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-create-one", HttpMethod.POST ));
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-delete-all", HttpMethod.DELETE ));
-		
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/count", this.domain.toLowerCase()+"-get-count", HttpMethod.GET ));
-		
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-get-one", HttpMethod.GET ));
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-update-one", HttpMethod.PATCH ));
-		authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-delete-one", HttpMethod.DELETE ));
-		
-		authorizations.forEach(a -> {
-			log.info("Created Basic Authorization {}", a);
-		});
+		if( this.authorizations == null ) {
+			this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
+			
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-read", HttpMethod.GET));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-create", HttpMethod.POST));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-delete-all", HttpMethod.DELETE));	
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/count", this.domain.toLowerCase()+"-get-count", HttpMethod.GET));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-read", HttpMethod.GET));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-update", HttpMethod.PATCH));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-delete-one", HttpMethod.DELETE));
+			
+			if( this.createCustomAuthorizations() != null ) {
+				this.authorizations.addAll(this.createCustomAuthorizations());
+			}
+			
+			this.authorizations.forEach(a -> {
+				log.info("Created Basic Authorization {}", a);
+			});
+		}
 		
 		return authorizations;
 	}

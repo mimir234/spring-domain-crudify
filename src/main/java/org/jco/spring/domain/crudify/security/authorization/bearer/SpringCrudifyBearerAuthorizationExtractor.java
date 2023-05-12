@@ -5,10 +5,11 @@ import java.io.IOException;
 import org.jco.spring.domain.crudify.security.authentication.dao.AbstractSpringCrudifyUserDetails;
 import org.jco.spring.domain.crudify.security.authentication.dao.ISpringCrudifyAuthenticationUserMapper;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationProvider;
+import org.jco.spring.domain.crudify.security.authorization.token.jwt.SpringCrudifyJwtTokenProvider;
 import org.jco.spring.domain.crudify.security.keys.SpringCrudifyKeyExpiredException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,6 +25,9 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
 	private ISpringCrudifyAuthorizationProvider authorizationProvider;
 	
 	private ISpringCrudifyAuthenticationUserMapper userMapper;
+	
+	@Value("${spring.domain.crudify.security.extractUserId}")
+	private String extractUserId = "";
 	
 	@Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -46,6 +50,10 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
 				    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 				    
 				    request.setAttribute("tenantId", userDetails.getTenantId());
+				    
+				    if( this.extractUserId != null && !this.extractUserId.isEmpty() ) {
+				    	request.setAttribute("userId", userDetails.getUuid());
+				    }
 				    			    
 				    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				    
@@ -57,5 +65,11 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
         }
         filterChain.doFilter(request, response);
     }
+
+	public SpringCrudifyBearerAuthorizationExtractor(SpringCrudifyJwtTokenProvider authorizationProvider,
+			ISpringCrudifyAuthenticationUserMapper userMapper) {
+				this.authorizationProvider = authorizationProvider;
+				this.userMapper = userMapper;
+	}
 
 }

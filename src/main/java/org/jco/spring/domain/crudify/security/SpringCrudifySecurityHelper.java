@@ -38,11 +38,13 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	
 	@Autowired
 	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
+
+	private ArrayList<ISpringCrudifyAuthorization> authorizations;
 	
 	@Override
 	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
 		
-		getAuthorizations().forEach(a -> {
+		this.getAuthorizations().forEach(a -> {
 			try {
 				http.authorizeHttpRequests().requestMatchers(a.getHttpMethod(), a.getEndpoint()).hasAnyAuthority(a.getRole());
 			} catch (Exception e) {
@@ -83,12 +85,14 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 
 	@Override
 	public List<ISpringCrudifyAuthorization> getAuthorizations() {
-		List<ISpringCrudifyAuthorization> authorizations = new ArrayList<ISpringCrudifyAuthorization>();
-		
-		this.services.forEach(service -> {
-			List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
-			authorizations.addAll(serviceAuthorizations);
-		});
+		if( this.authorizations == null ) {
+			this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
+			
+			this.services.forEach(service -> {
+				List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
+				authorizations.addAll(serviceAuthorizations);
+			});
+		}
 		
 		return authorizations;
 	}
