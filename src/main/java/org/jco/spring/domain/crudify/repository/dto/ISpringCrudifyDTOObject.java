@@ -3,7 +3,10 @@
  *******************************************************************************/
 package org.jco.spring.domain.crudify.repository.dto;
 
-public interface ISpringCrudifyDTOObject<T> {
+import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
+
+public interface ISpringCrudifyDTOObject<T extends ISpringCrudifyEntity> {
+	
 	//-----------------------------------------------------------//
 	// Abstract method below to be implemented by sub classes    //
 	//-----------------------------------------------------------//	
@@ -17,6 +20,13 @@ public interface ISpringCrudifyDTOObject<T> {
 	 * @param object
 	 */
 	public void update(ISpringCrudifyDTOObject<T> object);
+	
+	public ISpringCrudifyDTOFactory<T, ? extends ISpringCrudifyDTOObject<?>> getFactory();
 
+	public String getUuid();
+
+	public String getTenantId();
+
+	public String getId();
 
 }

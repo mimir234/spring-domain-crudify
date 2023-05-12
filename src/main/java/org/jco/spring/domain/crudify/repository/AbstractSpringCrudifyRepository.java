@@ -11,50 +11,59 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
-import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
+import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOFactory;
+import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.jco.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.jco.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
-@SuppressWarnings("rawtypes")
 @Slf4j
-public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEntity, S extends AbstractSpringCrudifyDTOObject> implements ISpringCrudifyRepository<T> {
+@EnableMongoRepositories
+public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> implements ISpringCrudifyRepository<Entity> {
 	
 	@Inject
-	protected ISpringCrudifyDAORepository<S> daoRepository;
-	
-    protected Class<T> clazz;
+	protected ISpringCrudifyDAORepository<Dto> daoRepository;
 
 	private String domain;
 
-	private ISpringCrudifyEntityFactory<T> factory;
+	private ISpringCrudifyEntityFactory<Entity> entityFactory;
+	private ISpringCrudifyDTOFactory<Entity, Dto> dtoFactory;
 	
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	@PostConstruct
     private void getDomain() {
-    	this.setEntityClazz();
-    	Constructor<T> constructor;
+    	
+    	Class<Entity> entityClass = this.getEntityClass();
+    	Class<Dto> dtoClass = this.getDTOClass();
+    	
+    	Constructor<Entity> entityConstructor;
+    	Constructor<Dto> dtoConstructor;
 		try {
 			
-			constructor = this.clazz.getConstructor();
-			T entity = (T) constructor.newInstance();
+			entityConstructor = entityClass.getConstructor();
+			Entity entity = (Entity) entityConstructor.newInstance();
 			if( entity.getDomain().isEmpty() ) {
 				this.domain = "unknown";
 			} else {
 				this.domain = entity.getDomain();
 			}
 			
-			this.factory = (ISpringCrudifyEntityFactory<T>) entity.getFactory();
+			this.entityFactory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
+			
+			dtoConstructor = dtoClass.getConstructor();
+			Dto dto = (Dto) dtoConstructor.newInstance();
+			this.dtoFactory = (ISpringCrudifyDTOFactory<Entity, Dto>) dto.getFactory();
 			
 		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			this.domain = "unknown";
-			this.factory = null;
+			this.entityFactory = null;
 		}
     }
 
@@ -82,9 +91,9 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	}
 	
 	@Override
-	public boolean doesExists(String tenantId, T entity) {
+	public boolean doesExists(String tenantId, Entity entity) {
  
-		S object = this.convertToDTOObject(tenantId, entity);
+		Dto object = this.dtoFactory.newInstance(tenantId, entity);
 		
 		log.info("[Tenant {}] [Domain {}] Checking if entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
 		
@@ -98,11 +107,11 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 
 
 	@Override
-	public List<T> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
+	public List<Entity> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
 		log.info("[Tenant {}] [Domain {}] Getting entities", tenantId, this.domain);
 
-		List<T> entities = new ArrayList<T>();
-		List<S> objects = null;
+		List<Entity> entities = new ArrayList<Entity>();
+		List<Dto> objects = null;
 
 		Pageable page = null; 
 				
@@ -113,15 +122,15 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 		objects = this.daoRepository.findByTenantId(tenantId, page, filter, sort);
 	
 		objects.forEach(s ->{
-			entities.add(this.convertToEntity(s));
+			entities.add((Entity) s.convert());
 		});
 	
 		return entities;
 	}
 
 	@Override
-	public void save(String tenantId, T entity) {
-		S object = this.convertToDTOObject(tenantId, entity);
+	public void save(String tenantId, Entity entity) {
+		Dto object = this.dtoFactory.newInstance(tenantId, entity);
 		log.info("[Tenant {}] [Domain {}] Saving entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
 
 		this.daoRepository.save( object );
@@ -129,20 +138,20 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public T update(String tenantId, T entity) {
+	public Entity update(String tenantId, Entity entity) {
 		
-		S object = this.convertToDTOObject(tenantId, entity);
-		
-		S objectToBeUpdated = this.daoRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId());
+		Dto object = this.dtoFactory.newInstance(tenantId, entity);
+
+		Dto objectToBeUpdated = this.daoRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId());
 		log.info("[Tenant {}] [Domain {}] Updating entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
 		
 		if( objectToBeUpdated != null ){
 			
-			this.update(objectToBeUpdated, object);
-			
+			objectToBeUpdated.update(object);
+		
 			this.daoRepository.save(objectToBeUpdated);
 			
-			return this.convertToEntity(objectToBeUpdated);
+			return (Entity) object.convert();
 		
 		} else {
 			return null;
@@ -151,13 +160,13 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	}
 	
 	@Override
-	public T getOneByUuid(String tenantId, String uuid) {
+	public Entity getOneByUuid(String tenantId, String uuid) {
 		log.info("[Tenant {}] [Domain {}] Looking for object with uuid "+uuid, tenantId, this.domain);
-		S object = this.daoRepository.findOneByUuidAndTenantId(uuid, tenantId);
+		Dto object = this.daoRepository.findOneByUuidAndTenantId(uuid, tenantId);
 		
 		if( object != null ){
 			log.info("[Tenant {}] [Domain {}] Object with uuid "+uuid+" found !", tenantId, this.domain);
-			return this.convertToEntity(object);
+			return (Entity) object.convert();
 		}
 		
 		log.info("[Tenant {}] [Domain {}] Object with uuid "+uuid+" not found.", tenantId, this.domain);
@@ -165,13 +174,13 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	}
 	
 	@Override
-	public T getOneById(String tenantId, String id) {
+	public Entity getOneById(String tenantId, String id) {
 		log.info("[Tenant {}] [Domain {}] Looking for object with id "+id, tenantId, this.domain);
-		S object = this.daoRepository.findOneByIdAndTenantId(id, tenantId);
+		Dto object = this.daoRepository.findOneByIdAndTenantId(id, tenantId);
 		
 		if( object != null ){
 			log.info("[Tenant {}] [Domain {}] Object with id "+id+" found !", tenantId, this.domain);
-			return this.convertToEntity(object);
+			return (Entity) object.convert();
 		}
 		
 		log.info("[Tenant {}] [Domain {}] Object with id "+id+" not found.", tenantId, this.domain);
@@ -179,22 +188,14 @@ public abstract class AbstractSpringCrudifyRepository<T extends ISpringCrudifyEn
 	}
 
 	@Override
-	public void delete(String tenantId, T entity) {
-		S object = this.convertToDTOObject(tenantId, entity);
+	public void delete(String tenantId, Entity entity) {
+		Dto object = this.dtoFactory.newInstance(tenantId, entity);
+
 		log.info("[Tenant {}] [Domain {}] Deleting entity with Uuid "+object.getUuid(), tenantId, this.domain);
 		
 		this.daoRepository.delete(object);
 	}
 	
+	protected abstract Class<Dto> getDTOClass();
 
-	//-----------------------------------------------------------//
-	// Abstract method below to be implemented by sub classes    //
-	//-----------------------------------------------------------//	
-
-	protected abstract S convertToDTOObject(String tenantId, T entity);
-
-	protected abstract T convertToEntity(S s);
-	
-	protected abstract void update(S objectToBeUpdated, S object);
-	
 }
