@@ -37,7 +37,4 @@ public class SpringCrudifyTenantVerifier extends OncePerRequestFilter {
 		
         filterChain.doFilter(request, response);
 	}
-	
-	
-
 }

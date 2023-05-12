@@ -8,9 +8,9 @@ import javax.inject.Inject;
 
 import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifyAuthenticationManager;
 import org.jco.spring.domain.crudify.security.authentication.ISpringCrudifySecurityException;
+import org.jco.spring.domain.crudify.security.authentication.ws.RolesRestService;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
-import org.jco.spring.domain.crudify.security.authorization.bearer.SpringCrudifyBearerAuthorizationExtractor;
 import org.jco.spring.domain.crudify.security.tenants.SpringCrudifyTenantVerifier;
 import org.jco.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +21,13 @@ import org.springframework.stereotype.Service;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @ConditionalOnProperty(name = "spring.domain.crudify.security", havingValue = "enabled", matchIfMissing = true)
 @SecurityScheme(name = "Bearer Authentication", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
+@Slf4j
 public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper {
 
 	@Inject
@@ -39,13 +42,31 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	@Autowired
 	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
 
+	@Getter
 	private ArrayList<ISpringCrudifyAuthorization> authorizations;
+	
+	@Autowired
+	private Optional<RolesRestService> rolesRestService;
 	
 	@Override
 	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
 		
-		this.getAuthorizations().forEach(a -> {
+		this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
+		
+		this.services.forEach(service -> {
+			List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
+			this.authorizations.addAll(serviceAuthorizations);
+		});
+		
+		if( this.rolesRestService.isPresent() ) {
+			this.authorizations.addAll(this.rolesRestService.get().getCustomAuthorizations());
+			
+			this.rolesRestService.get().setRoles(this.authorizations);
+		}
+		
+		this.authorizations.forEach(a -> {
 			try {
+				log.info("Created Basic Authorization {}", a);
 				http.authorizeHttpRequests().requestMatchers(a.getHttpMethod(), a.getEndpoint()).hasAnyAuthority(a.getRole());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -81,20 +102,6 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 
 		return http;
 
-	}
-
-	@Override
-	public List<ISpringCrudifyAuthorization> getAuthorizations() {
-		if( this.authorizations == null ) {
-			this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
-			
-			this.services.forEach(service -> {
-				List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
-				authorizations.addAll(serviceAuthorizations);
-			});
-		}
-		
-		return authorizations;
 	}
 
 }

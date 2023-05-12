@@ -26,8 +26,7 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
 	
 	private ISpringCrudifyAuthenticationUserMapper userMapper;
 	
-	@Value("${spring.domain.crudify.security.extractUserId}")
-	private String extractUserId = "";
+	private String extractUserId;
 	
 	@Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -51,7 +50,7 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
 				    
 				    request.setAttribute("tenantId", userDetails.getTenantId());
 				    
-				    if( this.extractUserId != null && !this.extractUserId.isEmpty() ) {
+				    if( this.extractUserId != null && !this.extractUserId.isEmpty() && this.extractUserId.equals("enabled")) {
 				    	request.setAttribute("userId", userDetails.getUuid());
 				    }
 				    			    
@@ -65,11 +64,5 @@ public class SpringCrudifyBearerAuthorizationExtractor extends OncePerRequestFil
         }
         filterChain.doFilter(request, response);
     }
-
-	public SpringCrudifyBearerAuthorizationExtractor(SpringCrudifyJwtTokenProvider authorizationProvider,
-			ISpringCrudifyAuthenticationUserMapper userMapper) {
-				this.authorizationProvider = authorizationProvider;
-				this.userMapper = userMapper;
-	}
 
 }

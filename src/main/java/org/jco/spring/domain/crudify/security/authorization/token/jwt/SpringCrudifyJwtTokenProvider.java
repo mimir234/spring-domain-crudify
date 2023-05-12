@@ -73,7 +73,7 @@ public class SpringCrudifyJwtTokenProvider implements ISpringCrudifyAuthorizatio
 	@Override
 	public String getAuthorization(Authentication authentication) throws SpringCrudifyKeyExpiredException {
 		AbstractSpringCrudifyUserDetails principal = (AbstractSpringCrudifyUserDetails) authentication.getPrincipal();
-		
+
 		return this.generateToken(principal.getUsername(), principal.getTenantId(), principal.getUuid());
 	}
 
@@ -104,7 +104,8 @@ public class SpringCrudifyJwtTokenProvider implements ISpringCrudifyAuthorizatio
 		return extractClaim(token, Claims::getSubject);
 	}
 
-	private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) throws SpringCrudifyKeyExpiredException {
+	private <T> T extractClaim(String token, Function<Claims, T> claimsResolver)
+			throws SpringCrudifyKeyExpiredException {
 		final Claims claims = extractAllClaims(token);
 		return claimsResolver.apply(claims);
 	}
@@ -114,11 +115,22 @@ public class SpringCrudifyJwtTokenProvider implements ISpringCrudifyAuthorizatio
 				.parseClaimsJws(token).getBody();
 	}
 
-	@Override
-	public boolean validateAuthorization(String token, UserDetails userDetails) throws SpringCrudifyKeyExpiredException {
-		// TODO Auto-generated method stub
-		return true;
+	public String extractUsername(String token) throws SpringCrudifyKeyExpiredException {
+		return extractClaim(token, Claims::getSubject);
 	}
 
+	private Boolean isTokenExpired(String token) throws SpringCrudifyKeyExpiredException {
+		return extractExpiration(token).before(new Date());
+	}
+
+	public Date extractExpiration(String token) throws SpringCrudifyKeyExpiredException {
+		return extractClaim(token, Claims::getExpiration);
+	}
+
+	@Override
+	public boolean validateAuthorization(String token, UserDetails userDetails) throws SpringCrudifyKeyExpiredException {
+		final String username = extractUsername(token);
+		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+	}
 
 }

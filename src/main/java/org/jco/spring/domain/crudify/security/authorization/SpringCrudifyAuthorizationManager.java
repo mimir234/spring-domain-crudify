@@ -30,6 +30,9 @@ public class SpringCrudifyAuthorizationManager implements ISpringCrudifyAuthoriz
 	private ISpringCrudifyAuthenticationUserMapper userMapper;
 
 	private SpringCrudifyJwtTokenProvider authorizationProvider = null;
+
+	@Value("${spring.domain.crudify.security.extractUserId}")
+	private String extractUserId;
 	
 	@Bean 
 	private ISpringCrudifyAuthorizationProvider getAuthorizationProvider() {
@@ -60,7 +63,7 @@ public class SpringCrudifyAuthorizationManager implements ISpringCrudifyAuthoriz
 	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
 		
 		try {
-			http.authorizeHttpRequests().and().addFilterBefore(new SpringCrudifyBearerAuthorizationExtractor(this.authorizationProvider, this.userMapper), UsernamePasswordAuthenticationFilter.class);
+			http.authorizeHttpRequests().and().addFilterBefore(new SpringCrudifyBearerAuthorizationExtractor(this.authorizationProvider, this.userMapper, this.extractUserId), UsernamePasswordAuthenticationFilter.class);
 		} catch (Exception e) {
 			throw new ISpringCrudifySecurityException(e);
 		}
