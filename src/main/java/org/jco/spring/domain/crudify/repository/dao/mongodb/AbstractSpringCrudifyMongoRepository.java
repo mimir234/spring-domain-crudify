@@ -17,14 +17,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>>
+public abstract class AbstractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>>
 		implements ISpringCrudifyDAORepository<T> {
 
 	@Inject
-	private MongoTemplate mongo;
+	protected MongoTemplate mongo;
 	
 	@Value("${spring.domain.crudify.magicTenantId}")
-	private String magicTenantId;
+	protected String magicTenantId;
 
 	@Override
 	public T save(T object) {
@@ -42,7 +42,7 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 		}
 
 		if (filter != null) {
-			Criteria criteria = AsbtractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
+			Criteria criteria = AbstractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
 			query.addCriteria(criteria);
 		}
 
@@ -185,7 +185,7 @@ public abstract class AsbtractSpringCrudifyMongoRepository<T extends AbstractSpr
 		}
 
 		if (filter != null) {
-			Criteria criteria = AsbtractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
+			Criteria criteria = AbstractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
 			query.addCriteria(criteria);
 		}
 		
