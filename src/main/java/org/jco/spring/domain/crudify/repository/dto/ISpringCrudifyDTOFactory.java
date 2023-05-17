@@ -2,8 +2,8 @@ package org.jco.spring.domain.crudify.repository.dto;
 
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
-public interface ISpringCrudifyDTOFactory<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> {
+public interface ISpringCrudifyDTOFactory<Entity, Dto extends ISpringCrudifyDTOObject<?>> {
 
-	Dto newInstance(String uuid, Entity entity);
+	Dto newInstance(String tenantId, Entity entity);
 	
 }

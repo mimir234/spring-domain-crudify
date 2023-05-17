@@ -1,6 +1,6 @@
 package org.jco.spring.domain.crudify.spec;
 
-public interface ISpringCrudifyEntityFactory<T extends ISpringCrudifyEntity> {
+public interface ISpringCrudifyEntityFactory<T> {
 	
 	T newInstance();
 

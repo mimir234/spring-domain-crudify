@@ -13,6 +13,7 @@ import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthor
 import org.jco.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
 import org.jco.spring.domain.crudify.security.tenants.SpringCrudifyTenantVerifier;
 import org.jco.spring.domain.crudify.ws.AbstractSpringCrudifyService;
+import org.jco.spring.domain.crudify.ws.SpringCrudifyEngineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +41,9 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	private List<AbstractSpringCrudifyService<?>> services;
 	
 	@Autowired
+	private List<SpringCrudifyEngineService> engineServices;
+	
+	@Autowired
 	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
 
 	@Getter
@@ -54,6 +58,11 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 		this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
 		
 		this.services.forEach(service -> {
+			List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
+			this.authorizations.addAll(serviceAuthorizations);
+		});
+		
+		this.engineServices.forEach(service -> {
 			List<ISpringCrudifyAuthorization> serviceAuthorizations = service.createAuthorizations();
 			this.authorizations.addAll(serviceAuthorizations);
 		});

@@ -29,7 +29,7 @@ public class RolesRestService {
 	private ArrayList<ISpringCrudifyAuthorization> roles;
 
 	@GetMapping("/roles")
-	public ResponseEntity<?> authenticate(@RequestBody SpringCrudifyLoginPasswordAuthenticationRequest authenticationRequest) {
+	public ResponseEntity<?> getRoles() {
 		List<String> auths = new ArrayList<String>();
 		
 		this.roles.forEach(r -> {

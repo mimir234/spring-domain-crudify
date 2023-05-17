@@ -31,14 +31,14 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
 	@Inject
 	protected ISpringCrudifyDAORepository<Dto> daoRepository;
 
-	private String domain;
+	protected String domain;
 
 	private ISpringCrudifyEntityFactory<Entity> entityFactory;
 	private ISpringCrudifyDTOFactory<Entity, Dto> dtoFactory;
 	
 	@SuppressWarnings("unchecked")
 	@PostConstruct
-    private void getDomain() {
+    protected void getDomain() {
     	
     	Class<Entity> entityClass = this.getEntityClass();
     	Class<Dto> dtoClass = this.getDTOClass();

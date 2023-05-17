@@ -50,16 +50,15 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	protected ISpringCrudifyRepository<Entity> crudRepository;
 
 	@Inject
-	private Optional<ISpringCrudifyConnector<Entity, List<Entity>>> crudConnector;
+	protected Optional<ISpringCrudifyConnector<Entity, List<Entity>>> crudConnector;
 
-	private String domain;
+	protected String domain;
 
 	private ISpringCrudifyEntityFactory<Entity> factory;
-	
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
-	private void getDomain() {
+	protected void getDomain() {
 		Class<Entity> clazz = this.getEntityClazz();
 		Constructor<Entity> constructor;
 		try {

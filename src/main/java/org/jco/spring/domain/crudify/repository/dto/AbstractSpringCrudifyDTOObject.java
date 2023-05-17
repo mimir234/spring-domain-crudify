@@ -36,6 +36,8 @@ public abstract class AbstractSpringCrudifyDTOObject<Entity extends ISpringCrudi
 
 	protected AbstractSpringCrudifyDTOObject(String tenantId, Entity entity){
 		this.tenantId = tenantId;
+		this.id = entity.getId();
+		this.uuid = entity.getUuid();
 		this.create(entity);
 	}
 

@@ -17,8 +17,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-public abstract class AbstractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>>
-		implements ISpringCrudifyDAORepository<T> {
+public abstract class AbstractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>> implements ISpringCrudifyDAORepository<T> {
 
 	@Inject
 	protected MongoTemplate mongo;
