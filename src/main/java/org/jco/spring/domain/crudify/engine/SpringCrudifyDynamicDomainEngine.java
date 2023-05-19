@@ -3,23 +3,28 @@ package org.jco.spring.domain.crudify.engine;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.jco.spring.domain.crudify.connector.ISpringCrudifyConnector;
+import org.jco.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.jco.spring.domain.crudify.controller.SpringCrudifyEngineController;
+import org.jco.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.jco.spring.domain.crudify.repository.SpringCrudifyEngineRepository;
+import org.jco.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.jco.spring.domain.crudify.repository.dao.SpringCrudifyDao;
 import org.jco.spring.domain.crudify.repository.dao.mongodb.SpringCrudifyEngineMongoRepository;
 import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.jco.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
+import org.jco.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.jco.spring.domain.crudify.ws.SpringCrudifyEngineService;
 import org.reflections.Reflections;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -35,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
-public class SpringCrudifyDynamicDomainEngine {
+public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDomainEngine {
 
 	@Inject
 	protected MongoTemplate mongo;
@@ -51,12 +56,39 @@ public class SpringCrudifyDynamicDomainEngine {
 
 	@Autowired
 	private RequestMappingHandlerMapping requestMappingHandlerMapping;
+
+	private ArrayList<SpringCrudifyEngineService> services;
+	
+	private Map<String, ISpringCrudifyDAORepository<?>> daos = new HashMap<String, ISpringCrudifyDAORepository<?>>();
+	private Map<String, ISpringCrudifyRepository<?>> repositries = new HashMap<String, ISpringCrudifyRepository<?>>();
+	private Map<String, ISpringCrudifyController<?>> controllers = new HashMap<String, ISpringCrudifyController<?>>();
+	private Map<String, AbstractSpringCrudifyService<?>> restServices = new HashMap<String, AbstractSpringCrudifyService<?>>();
+	
+	@Override
+	public ISpringCrudifyDAORepository<?> getDao(String name){
+		return this.daos.get(name);
+	}
+	
+	@Override
+	public ISpringCrudifyRepository<?> getRepository(String name){
+		return this.repositries.get(name);
+	}
+	
+	@Override
+	public ISpringCrudifyController<?> getController(String name){
+		return this.controllers.get(name);
+	}
+	
+	@Override
+	public AbstractSpringCrudifyService<?> getService(String name){
+		return this.restServices.get(name);
+	}
 	
 	@Bean
-	public List<SpringCrudifyEngineService> engineServices() throws SpringCrudifyEngineException {
+	protected List<SpringCrudifyEngineService> engineServices() throws SpringCrudifyEngineException {
 
 		log.info("== Starting Dynamic Domain Engine ==");
-		List<SpringCrudifyEngineService> services = new ArrayList<SpringCrudifyEngineService>();
+		this.services = new ArrayList<SpringCrudifyEngineService>();
 		
 		for (String pack : this.scanPackages) {
 			log.info("Scanning package "+ pack);
@@ -97,7 +129,7 @@ public class SpringCrudifyDynamicDomainEngine {
 				SpringCrudifyDao db = entityAnnotation.db();
 				
 				String controller__ = entityAnnotation.controller();
-				ISpringCrudifyDynamicController controller = null;
+				ISpringCrudifyDynamicController<?> controller = null;
 				
 				if( controller__ != null && !controller__.isEmpty() ) {
 					String[] splits = controller__.split(":");
@@ -114,12 +146,12 @@ public class SpringCrudifyDynamicDomainEngine {
 
 					switch(splits[0]) {
 					case "bean":
-						controller = (ISpringCrudifyDynamicController) this.context.getBean(controllerClass);
+						controller = (ISpringCrudifyDynamicController<?>) this.context.getBean(controllerClass);
 						break;
 					case "class":
 						try {
 							Constructor<?> ctor = controllerClass.getConstructor();
-							controller = (ISpringCrudifyDynamicController) ctor.newInstance();
+							controller = (ISpringCrudifyDynamicController<?>) ctor.newInstance();
 						} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 							throw new SpringCrudifyEngineException(e);
 						}
@@ -141,7 +173,7 @@ public class SpringCrudifyDynamicDomainEngine {
 	}
 
 
-	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController dynamicController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException {
+	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController<?> dynamicController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException {
 
 		log.info("Creating Dynamic Domain [Entity [{}], DTO [{}], DB [{}], authorize_creation [{}], authorize_read_all [{}], authorize_read_one [{}], authorize_update_one [{}], authorize_delete_one [{}], authorize_delete_all [{}], authorize_count [{}]]",
 				entityClass.getCanonicalName(), 
@@ -164,12 +196,18 @@ public class SpringCrudifyDynamicDomainEngine {
 			dao = new SpringCrudifyEngineMongoRepository(dtoClass, this.mongo, this.magicTenantId);
 			break;
 		}
-
+		
 		SpringCrudifyEngineRepository repo = new SpringCrudifyEngineRepository(entityClass, dtoClass, dao);
 		SpringCrudifyEngineController controller = new SpringCrudifyEngineController(entityClass, repo, connector, dynamicController);
 		SpringCrudifyEngineService service = new SpringCrudifyEngineService(entityClass, controller, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
 
+		String domain = service.getDomain();
+		
 		services.add(service);
+		this.daos.put(domain.toLowerCase()+"_dao", dao);
+		this.repositries.put(domain.toLowerCase()+"_repository", repo);
+		this.controllers.put(domain.toLowerCase()+"_controller", controller);
+		this.restServices.put(domain.toLowerCase()+"_service", service);
 		
 		String baseUrl = "/"+service.getDomain().toLowerCase();
 		
