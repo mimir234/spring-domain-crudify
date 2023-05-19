@@ -25,10 +25,24 @@ public class SpringCrudifyEngineService extends AbstractSpringCrudifyService<ISp
 	
 	@Setter
 	protected Class<?> entityClass;
+	private boolean authorize_creation;
+	private boolean authorize_read_all;
+	private boolean authorize_read_one;
+	private boolean authorize_update_one;
+	private boolean authorize_delete_one;
+	private boolean authorize_count;
+	private boolean authorize_delete_all;
 
-	public SpringCrudifyEngineService(Class<?> entityClass, ISpringCrudifyController<ISpringCrudifyEntity> crudController) {
+	public SpringCrudifyEngineService(Class<?> entityClass, ISpringCrudifyController<ISpringCrudifyEntity> crudController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) {
 		this.entityClass = entityClass;
 		this.crudController = crudController;
+		this.authorize_creation = authorize_creation;
+		this.authorize_read_all = authorize_read_all;
+		this.authorize_read_one = authorize_read_one;
+		this.authorize_update_one = authorize_update_one;
+		this.authorize_delete_one = authorize_delete_one;
+		this.authorize_delete_all = authorize_delete_all;
+		this.authorize_count = authorize_count;
 		
 		this.getDomain();
 		this.init();
@@ -36,13 +50,13 @@ public class SpringCrudifyEngineService extends AbstractSpringCrudifyService<ISp
 	
 	@Override
 	protected void defineAuthorizations() {
-		this.AUTHORIZE_CREATION = true;
-		this.AUTHORIZE_DELETE_ALL = true;
-		this.AUTHORIZE_DELETE_ONE = true;
-		this.AUTHORIZE_GET_ALL = true;
-		this.AUTHORIZE_GET_ONE = true;
-		this.AUTHORIZE_UPDATE = true;
-		this.AUTHORIZE_COUNT = true;
+		this.AUTHORIZE_CREATION = this.authorize_creation;
+		this.AUTHORIZE_DELETE_ALL = this.authorize_delete_all;
+		this.AUTHORIZE_DELETE_ONE = this.authorize_delete_one;
+		this.AUTHORIZE_GET_ALL = this.authorize_read_all;
+		this.AUTHORIZE_GET_ONE = this.authorize_read_one;
+		this.AUTHORIZE_UPDATE = this.authorize_update_one;
+		this.AUTHORIZE_COUNT = this.authorize_count;
 	}
 
 	@Override

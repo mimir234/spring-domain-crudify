@@ -13,20 +13,22 @@ public @interface SpringCrudifyEntity {
 
 	String dto();
 
-	SpringCrudifyDao db();
+	SpringCrudifyDao db() default SpringCrudifyDao.mongo;
 	
-	boolean authorize_creation();
+	boolean authorize_creation() default true;
 
-	boolean authorize_read_all();
+	boolean authorize_read_all() default true;
 
-	boolean authorize_read_one();
+	boolean authorize_read_one() default true;
 
-	boolean authorize_update_one();
+	boolean authorize_update_one() default true;
 
-	boolean authorize_delete_one();
+	boolean authorize_delete_one() default true;
 
-	boolean authorize_delete_all();
+	boolean authorize_delete_all() default true;
 
-	boolean authorize_count();
+	boolean authorize_count() default true;
+	
+	String controller() default "";
 
 }

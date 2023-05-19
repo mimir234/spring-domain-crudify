@@ -1,7 +1,5 @@
 package org.jco.spring.domain.crudify.engine;
 
-import java.util.Date;
-
 import org.jco.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOFactory;
 import org.jco.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;

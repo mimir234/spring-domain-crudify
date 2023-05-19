@@ -16,6 +16,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@SpringCrudifyEntity(dto = "org.jco.spring.domain.crudify.engine.TestDTO")
 public class TestEntity implements ISpringCrudifyEntity {
 
 	@JsonProperty
@@ -51,7 +52,4 @@ public class TestEntity implements ISpringCrudifyEntity {
 			}
 		};
 	}
-	
-	
-	
 }
