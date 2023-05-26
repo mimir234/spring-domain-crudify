@@ -30,5 +30,11 @@ public @interface SpringCrudifyEntity {
 	boolean authorize_count() default true;
 	
 	String controller() default "";
+	
+	String connector() default "";
+
+	String repository() default "";
+	
+	String dao() default "";
 
 }

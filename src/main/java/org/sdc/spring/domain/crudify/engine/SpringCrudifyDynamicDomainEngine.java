@@ -19,6 +19,7 @@ import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.repository.SpringCrudifyEngineRepository;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dao.SpringCrudifyDao;
+import org.sdc.spring.domain.crudify.repository.dao.mongodb.AbstractSpringCrudifyMongoRepository;
 import org.sdc.spring.domain.crudify.repository.dao.mongodb.SpringCrudifyEngineMongoRepository;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
@@ -128,41 +129,40 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 				
 				SpringCrudifyDao db = entityAnnotation.db();
 				
+				// Dynamic Controller
 				String controller__ = entityAnnotation.controller();
 				ISpringCrudifyDynamicController<?> controller = null;
 				
-				if( controller__ != null && !controller__.isEmpty() ) {
-					String[] splits = controller__.split(":");
-					Class<?> controllerClass;
-					try {
-						controllerClass = Class.forName(splits[1]);
-					} catch (ClassNotFoundException e1) {
-						throw new SpringCrudifyEngineException(e1);
-					}
-					
-					if (!ISpringCrudifyDynamicController.class.isAssignableFrom(controllerClass)) {
-						throw new SpringCrudifyEngineException("The class [" + dtoClass.getName() + "] must implements the ISpringCrudifyDynamicController interface.");
-					}
-
-					switch(splits[0]) {
-					case "bean":
-						controller = (ISpringCrudifyDynamicController<?>) this.context.getBean(controllerClass);
-						break;
-					case "class":
-						try {
-							Constructor<?> ctor = controllerClass.getConstructor();
-							controller = (ISpringCrudifyDynamicController<?>) ctor.newInstance();
-						} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-							throw new SpringCrudifyEngineException(e);
-						}
-						break;
-					default:
-						throw new SpringCrudifyEngineException("Invalid controller "+controller__+", should be bean: or class:");
-					}
+				if( controller__ != null && !controller__.isEmpty() ) {					
+					controller = (ISpringCrudifyDynamicController<?>) this.getObjectFromConfiguration(controller__, ISpringCrudifyDynamicController.class);
+				}
+				
+				// Connector 
+				String connector__ = entityAnnotation.connector();
+				ISpringCrudifyConnector<?, ?> connector = null;
+				
+				if( connector__ != null && !connector__.isEmpty() ) {					
+					connector = (ISpringCrudifyConnector<?, ?>) this.getObjectFromConfiguration(connector__, ISpringCrudifyConnector.class);
+				}
+				
+				// Repository
+				String repo__ = entityAnnotation.repository();
+				ISpringCrudifyRepository<?> repo = null;
+				
+				if( repo__ != null && !repo__.isEmpty() ) {					
+					repo = (ISpringCrudifyRepository<?>) this.getObjectFromConfiguration(repo__, ISpringCrudifyRepository.class);
+				}
+				
+				//DAO
+				String dao__ = entityAnnotation.repository();
+				ISpringCrudifyDAORepository<?> dao = null;
+				
+				if( dao__ != null && !dao__.isEmpty() ) {					
+					dao = (ISpringCrudifyDAORepository<?>) this.getObjectFromConfiguration(dao__, ISpringCrudifyDAORepository.class);
 				}
 
 				try {
-					this.createDynamicDomain(services, entityClass, dtoClass, db, controller, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
+					this.createDynamicDomain(services, entityClass, dtoClass, db, controller, connector, repo, dao, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
 				} catch (NoSuchMethodException e) {
 					throw new SpringCrudifyEngineException(e);
 				}
@@ -173,7 +173,43 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 	}
 
 
-	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController<?> dynamicController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException {
+	private Object getObjectFromConfiguration(String objectName, Class<?> superClass) throws SpringCrudifyEngineException {
+		Object obj = null; 
+		
+		String[] splits = objectName.split(":");
+		Class<?> objClass;
+		try {
+			objClass = Class.forName(splits[1]);
+		} catch (ClassNotFoundException e1) {
+			throw new SpringCrudifyEngineException(e1);
+		}
+		
+		if (!superClass.isAssignableFrom(objClass)) {
+			throw new SpringCrudifyEngineException("The class [" + objClass.getName() + "] must implements the ["+superClass.getCanonicalName()+"] interface.");
+		}
+
+		switch(splits[0]) {
+		case "bean":
+			obj = this.context.getBean(objClass);
+			break;
+		case "class":
+			try {
+				Constructor<?> ctor = objClass.getConstructor();
+				obj = ctor.newInstance();
+			} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				throw new SpringCrudifyEngineException(e);
+			}
+			break;
+		default:
+			throw new SpringCrudifyEngineException("Invalid controller "+objectName+", should be bean: or class:");
+		}
+		
+		
+		return obj;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController<?> dynamicController, ISpringCrudifyConnector<?, ?> connector, ISpringCrudifyRepository<?> repo, ISpringCrudifyDAORepository<?> dao, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException {
 
 		log.info("Creating Dynamic Domain [Entity [{}], DTO [{}], DB [{}], authorize_creation [{}], authorize_read_all [{}], authorize_read_one [{}], authorize_update_one [{}], authorize_delete_one [{}], authorize_delete_all [{}], authorize_count [{}]]",
 				entityClass.getCanonicalName(), 
@@ -187,18 +223,24 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 				authorize_delete_all,
 				authorize_count);
 		
-		Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connector = Optional.empty();
-		SpringCrudifyEngineMongoRepository dao = null;
+		Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj = Optional.empty();
 		
-		switch(db) {
-		default:
-		case mongo:
-			dao = new SpringCrudifyEngineMongoRepository(dtoClass, this.mongo, this.magicTenantId);
-			break;
+		if( dao == null ) {	
+			switch(db) {
+			default:
+			case mongo:
+				dao = new SpringCrudifyEngineMongoRepository(dtoClass, this.mongo, this.magicTenantId);
+				break;
+			}
 		}
 		
-		SpringCrudifyEngineRepository repo = new SpringCrudifyEngineRepository(entityClass, dtoClass, dao);
-		SpringCrudifyEngineController controller = new SpringCrudifyEngineController(entityClass, repo, connector, dynamicController);
+		if( repo == null ) {
+			repo = new SpringCrudifyEngineRepository(entityClass, dtoClass, dao);
+		} else {
+			repo.setDao(dao);
+		}
+		
+		SpringCrudifyEngineController controller = new SpringCrudifyEngineController(entityClass, (ISpringCrudifyRepository<ISpringCrudifyEntity>) repo, connectorObj, dynamicController);
 		SpringCrudifyEngineService service = new SpringCrudifyEngineService(entityClass, controller, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
 
 		String domain = service.getDomain();

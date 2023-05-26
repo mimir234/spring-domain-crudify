@@ -29,4 +29,9 @@ public class SpringCrudifyEngineRepository extends AbstractSpringCrudifyReposito
 		return (Class<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>) this.dtoClass;
 	}
 
+	@Override
+	public void setDao(ISpringCrudifyDAORepository<?> dao) {
+		this.daoRepository = (ISpringCrudifyDAORepository<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>) daoRepository;
+	}
+
 }

@@ -5,6 +5,7 @@ package org.sdc.spring.domain.crudify.repository;
 
 import java.util.List;
 
+import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
@@ -37,5 +38,7 @@ public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity> {
 	long getCount(String tenantId, SpringCrudifyLiteral filter);
 
 	Class<Entity> getEntityClass();
+
+	void setDao(ISpringCrudifyDAORepository<?> dao);
 
 }
