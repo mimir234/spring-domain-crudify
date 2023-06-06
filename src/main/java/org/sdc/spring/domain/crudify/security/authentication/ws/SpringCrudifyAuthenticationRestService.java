@@ -47,7 +47,7 @@ public class SpringCrudifyAuthenticationRestService {
 		try {
 			authentication = this.authenticationManager.authenticate(authentication);
 		} catch (Exception e) {
-			return new ResponseEntity<>(new ISpringCrudifyErrorObject("Authentication failed"), HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.BAD_REQUEST);
 		}
 		
         if (authentication.isAuthenticated()) {

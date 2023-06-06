@@ -65,7 +65,7 @@ public class SpringCrudifyAuthenticationManager implements ISpringCrudifyAuthent
 		try {
 			http.authorizeHttpRequests()
 				.requestMatchers(HttpMethod.POST, "/authenticate").permitAll().and()
-				.authenticationProvider(authenticationProvider())
+				.authenticationProvider(this.authenticationProvider())
 				.authorizeHttpRequests().and()
 				.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and();
