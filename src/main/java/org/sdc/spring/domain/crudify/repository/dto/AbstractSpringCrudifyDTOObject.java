@@ -9,7 +9,6 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import lombok.Data;
-import lombok.Getter;
 
 /**
  * 
@@ -18,7 +17,6 @@ import lombok.Getter;
  * @param <Entity>
  */
 @Data
-@Getter
 public abstract class AbstractSpringCrudifyDTOObject<Entity extends ISpringCrudifyEntity> implements ISpringCrudifyDTOObject<Entity> {
 	
 	@Id

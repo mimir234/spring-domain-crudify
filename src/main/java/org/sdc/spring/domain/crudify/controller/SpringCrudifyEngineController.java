@@ -13,13 +13,13 @@ import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 public class SpringCrudifyEngineController extends AbstractSpringCrudifyController<ISpringCrudifyEntity> {
 
 	private Class<?> entityClass;
-	private ISpringCrudifyDynamicController dynamicController;
+	private ISpringCrudifyDynamicController<ISpringCrudifyEntity> dynamicController;
 
-	public SpringCrudifyEngineController(Class<?> entityClass, ISpringCrudifyRepository<ISpringCrudifyEntity> crudRepository, Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> crudConnector, ISpringCrudifyDynamicController dynamicController) {
+	public SpringCrudifyEngineController(Class<?> entityClass, ISpringCrudifyRepository<ISpringCrudifyEntity> crudRepository, Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> crudConnector, ISpringCrudifyDynamicController<?> dynamicController) {
 		this.entityClass = entityClass;
 		this.crudRepository = crudRepository;
 		this.crudConnector = crudConnector;
-		this.dynamicController = dynamicController;
+		this.dynamicController = (ISpringCrudifyDynamicController<ISpringCrudifyEntity>) dynamicController;
 		
 		this.getDomain();
 	}

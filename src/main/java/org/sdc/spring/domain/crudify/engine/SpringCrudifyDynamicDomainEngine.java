@@ -1,5 +1,6 @@
 package org.sdc.spring.domain.crudify.engine;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -19,14 +20,13 @@ import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.repository.SpringCrudifyEngineRepository;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dao.SpringCrudifyDao;
-import org.sdc.spring.domain.crudify.repository.dao.mongodb.AbstractSpringCrudifyMongoRepository;
 import org.sdc.spring.domain.crudify.repository.dao.mongodb.SpringCrudifyEngineMongoRepository;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.sdc.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.sdc.spring.domain.crudify.ws.SpringCrudifyEngineService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -37,6 +37,10 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.pattern.PathPatternParser;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,8 +59,11 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 	@Value("${spring.domain.crudify.engine.packages}")
 	protected String[] scanPackages;
 
-	@Autowired
+	@Inject
 	private RequestMappingHandlerMapping requestMappingHandlerMapping;
+	
+	@Inject
+    public OpenAPI openApi;
 
 	private ArrayList<SpringCrudifyEngineService> services;
 	
@@ -64,6 +71,8 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 	private Map<String, ISpringCrudifyRepository<?>> repositries = new HashMap<String, ISpringCrudifyRepository<?>>();
 	private Map<String, ISpringCrudifyController<?>> controllers = new HashMap<String, ISpringCrudifyController<?>>();
 	private Map<String, AbstractSpringCrudifyService<?>> restServices = new HashMap<String, AbstractSpringCrudifyService<?>>();
+
+	private SpringCrudifyOpenAPIHelper openApiHelper;
 	
 	@Override
 	public ISpringCrudifyDAORepository<?> getDao(String name){
@@ -87,6 +96,8 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 	
 	@Bean
 	protected List<SpringCrudifyEngineService> engineServices() throws SpringCrudifyEngineException {
+		
+		this.openApiHelper = new SpringCrudifyOpenAPIHelper();
 
 		log.info("== Starting Dynamic Domain Engine ==");
 		this.services = new ArrayList<SpringCrudifyEngineService>();
@@ -162,8 +173,8 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 				}
 
 				try {
-					this.createDynamicDomain(services, entityClass, dtoClass, db, controller, connector, repo, dao, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
-				} catch (NoSuchMethodException e) {
+					this.createDynamicDomain(this.services, entityClass, dtoClass, db, controller, connector, repo, dao, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
+				} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | IOException e) {
 					throw new SpringCrudifyEngineException(e);
 				}
 			}
@@ -208,9 +219,37 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		return obj;
 	}
 
+	/**
+	 * 
+	 * @param services
+	 * @param entityClass
+	 * @param dtoClass
+	 * @param db
+	 * @param dynamicController
+	 * @param connector
+	 * @param repo
+	 * @param dao
+	 * @param authorize_creation
+	 * @param authorize_read_all
+	 * @param authorize_read_one
+	 * @param authorize_update_one
+	 * @param authorize_delete_one
+	 * @param authorize_delete_all
+	 * @param authorize_count
+	 * @throws NoSuchMethodException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws IOException
+	 */
 	@SuppressWarnings("unchecked")
-	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController<?> dynamicController, ISpringCrudifyConnector<?, ?> connector, ISpringCrudifyRepository<?> repo, ISpringCrudifyDAORepository<?> dao, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException {
-
+	private void createDynamicDomain(List<SpringCrudifyEngineService> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyDynamicController<?> dynamicController, ISpringCrudifyConnector<?, ?> connector, ISpringCrudifyRepository<?> repo, ISpringCrudifyDAORepository<?> dao, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+		
+		/*
+		 * TODO: THIS METHOD NEEDS TO BE REFACTORED
+		 */
+		
 		log.info("Creating Dynamic Domain [Entity [{}], DTO [{}], DB [{}], authorize_creation [{}], authorize_read_all [{}], authorize_read_one [{}], authorize_update_one [{}], authorize_delete_one [{}], authorize_delete_all [{}], authorize_count [{}]]",
 				entityClass.getCanonicalName(), 
 				dtoClass.getCanonicalName(), 
@@ -259,19 +298,59 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		RequestMappingInfo requestMappingInfoGetAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.GET).options(options).build();
 		RequestMappingInfo requestMappingInfoDeleteAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.DELETE).options(options).build();
 		RequestMappingInfo requestMappingInfoCreate = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.POST).options(options).build();
-		RequestMappingInfo requestMappingInfoCount = RequestMappingInfo.paths(baseUrl+"/count").methods(RequestMethod.DELETE).options(options).build();
+		RequestMappingInfo requestMappingInfoCount = RequestMappingInfo.paths(baseUrl+"/count").methods(RequestMethod.GET).options(options).build();
 		RequestMappingInfo requestMappingInfoGetOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.GET).options(options).build();
 		RequestMappingInfo requestMappingInfoUpdate = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.PATCH).options(options).build();
 		RequestMappingInfo requestMappingInfoDeleteOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.DELETE).options(options).build();
 		
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetAll, service, SpringCrudifyEngineService.class.getMethod("getEntities", String.class, SpringCrudifyReadOutputMode.class, Integer.class, Integer.class, String.class, String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, service, SpringCrudifyEngineService.class.getMethod("deleteAll", String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, service, SpringCrudifyEngineService.class.getMethod("createEntity", String.class, String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCount, service, SpringCrudifyEngineService.class.getMethod("getCount", String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, service, SpringCrudifyEngineService.class.getMethod("getEntity", String.class, String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, service, SpringCrudifyEngineService.class.getMethod("updateEntity", String.class, String.class, String.class));
-		this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, service, SpringCrudifyEngineService.class.getMethod("deleteEntity", String.class, String.class));
+		Tag tag = new Tag().name("Domain "+service.getDomain().toLowerCase());
+		this.openApi.addTagsItem(tag);
 		
+		ISpringCrudifyEntity entity = SpringCrudifyEntityHelper.getOneInstance((Class<ISpringCrudifyEntity>) entityClass);
+		
+		OpenAPI templateOpenApi = this.openApiHelper.getOpenApi(domain.toLowerCase(), entityClass.getSimpleName(), entity.getOpenApiSchema());
+		PathItem pathItemBase = new PathItem();
+		PathItem pathItemCount = new PathItem();
+		PathItem pathItemUuid = new PathItem();
+		
+		this.openApi.getComponents().addSchemas(entityClass.getSimpleName(), templateOpenApi.getComponents().getSchemas().get(entityClass.getSimpleName()));
+		this.openApi.getComponents().addSchemas("ErrorObject", templateOpenApi.getComponents().getSchemas().get("ErrorObject"));
+		this.openApi.getComponents().addSchemas("SortQuery", templateOpenApi.getComponents().getSchemas().get("SortQuery"));
+		this.openApi.getComponents().addSchemas("FilterQuery", templateOpenApi.getComponents().getSchemas().get("FilterQuery"));
+
+		if( authorize_read_all ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetAll, service, SpringCrudifyEngineService.class.getMethod("getEntities", String.class, SpringCrudifyReadOutputMode.class, Integer.class, Integer.class, String.class, String.class));
+			this.openApi.path(baseUrl, pathItemBase.get(templateOpenApi.getPaths().get(baseUrl).getGet()));
+		}
+		if( authorize_delete_all ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, service, SpringCrudifyEngineService.class.getMethod("deleteAll", String.class));
+			this.openApi.path(baseUrl,pathItemBase.delete(templateOpenApi.getPaths().get(baseUrl).getDelete()));
+		}
+		if( authorize_creation ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, service, SpringCrudifyEngineService.class.getMethod("createEntity", String.class, String.class));
+			this.openApi.path(baseUrl, pathItemBase.post(templateOpenApi.getPaths().get(baseUrl).getPost()));
+		}
+		if( authorize_count ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCount, service, SpringCrudifyEngineService.class.getMethod("getCount", String.class));
+			this.openApi.path(baseUrl+"/count", pathItemCount.get(templateOpenApi.getPaths().get(baseUrl+"/count").getGet()));
+		}
+		if( authorize_read_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, service, SpringCrudifyEngineService.class.getMethod("getEntity", String.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.get(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getGet()));
+		}
+		if( authorize_update_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, service, SpringCrudifyEngineService.class.getMethod("updateEntity", String.class, String.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.patch(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getPatch()));
+		}
+		if( authorize_delete_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, service, SpringCrudifyEngineService.class.getMethod("deleteEntity", String.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.delete(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getDelete()));
+		}
+
+		Info infos = this.openApi.getInfo();
+		String description = infos.getDescription() + "       The configured Magic Tenant ID is : 0";
+		infos.description(description);
+
 		return;
 	}
 

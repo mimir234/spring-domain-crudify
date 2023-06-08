@@ -51,4 +51,10 @@ public class TestEntity implements ISpringCrudifyEntity {
 		};
 	}
 
+	@Override
+	public String getOpenApiSchema() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

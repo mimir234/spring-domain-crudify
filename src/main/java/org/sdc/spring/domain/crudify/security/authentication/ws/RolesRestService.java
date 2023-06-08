@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @ConditionalOnProperty(name = "spring.domain.crudify.security.exposeRoles", havingValue = "enabled", matchIfMissing = true)
 public class RolesRestService {
 	
-	private ArrayList<ISpringCrudifyAuthorization> roles;
+	private ArrayList<ISpringCrudifyAuthorization> roles = new ArrayList<ISpringCrudifyAuthorization>();
 
 	@GetMapping("/roles")
 	public ResponseEntity<?> getRoles() {
@@ -50,7 +50,7 @@ public class RolesRestService {
 	}
 
 	public void setRoles(ArrayList<ISpringCrudifyAuthorization> authorizations) {
-		this.roles = authorizations;
+		this.roles.addAll(authorizations);
 	}
 
 }
