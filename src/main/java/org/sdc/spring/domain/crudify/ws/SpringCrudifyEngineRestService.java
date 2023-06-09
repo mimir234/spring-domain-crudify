@@ -96,4 +96,22 @@ public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService
 		return this.updateEntity(uuid, (ISpringCrudifyEntity) entityObj, tenantId);
 	}
 
+	@Override
+	public void authorize(boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one,
+			boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all,
+			boolean authorize_count) {
+		this.authorize_creation = authorize_creation;
+		this.authorize_read_all = authorize_read_all;
+		this.authorize_read_one = authorize_read_one;
+		this.authorize_update_one = authorize_update_one;
+		this.authorize_delete_one = authorize_delete_one;
+		this.authorize_delete_all = authorize_delete_all;
+		this.authorize_count = authorize_count;
+	}
+
+	@Override
+	public void setController(ISpringCrudifyController<?> controller) {
+		this.crudController = (ISpringCrudifyController<ISpringCrudifyEntity>) controller;
+	}
+
 }

@@ -317,7 +317,9 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		if( ws == null ) {
 			ws = new SpringCrudifyEngineRestService(entityClass, (ISpringCrudifyController<ISpringCrudifyEntity>) controller, authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
 		} else {
-			
+			ws.setEntityClass(entityClass);
+			ws.setController(controller);
+			ws.authorize(authorize_creation, authorize_read_all, authorize_read_one, authorize_update_one, authorize_delete_one, authorize_delete_all, authorize_count);
 		}
 
 		String domain = ws.getDomain();

@@ -2,6 +2,7 @@ package org.sdc.spring.domain.crudify.ws;
 
 import java.util.List;
 
+import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
@@ -26,5 +27,13 @@ public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> 
 	ResponseEntity<?> deleteAll(String tenantId);
 
 	ResponseEntity<?> getCount(String tenantId);
+
+	void authorize(boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one,
+			boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all,
+			boolean authorize_count);
+
+	void setEntityClass(Class<?> entityClass);
+
+	void setController(ISpringCrudifyController<?> controller);
 
 }
