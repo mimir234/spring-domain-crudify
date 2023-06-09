@@ -1,4 +1,4 @@
-package org.sdc.spring.domain.crudify.engine;
+package org.sdc.spring.domain.crudify.spec;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,6 +30,10 @@ public @interface SpringCrudifyEntity {
 	boolean authorize_count() default true;
 	
 	String controller() default "";
+	
+	String business() default "";
+	
+	String ws() default "";
 	
 	String connector() default "";
 

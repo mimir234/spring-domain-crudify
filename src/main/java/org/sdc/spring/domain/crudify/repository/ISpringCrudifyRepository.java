@@ -41,4 +41,6 @@ public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity> {
 
 	void setDao(ISpringCrudifyDAORepository<?> dao);
 
+	void setEntityClass(Class<?> entityClass);
+
 }

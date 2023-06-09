@@ -36,6 +36,7 @@ public interface ISpringCrudifyEntity {
 	@JsonIgnore
 	ISpringCrudifyEntityFactory<? extends ISpringCrudifyEntity> getFactory();
 	
+	@JsonIgnore
 	String getOpenApiSchema();
 	
 }

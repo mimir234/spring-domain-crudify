@@ -252,7 +252,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 	}
 
 	// -----------------------------------------------------------//
-	// Abstract methods below to be implemented by sub classes //
+	// Abstract methods below to be implemented by sub classes    //
 	// -----------------------------------------------------------//
 
 	abstract public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<?> message) throws SpringCrudifyConnectorException;

@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Setter;
 
 @SuppressWarnings("unchecked")
-public class SpringCrudifyEngineService extends AbstractSpringCrudifyService<ISpringCrudifyEntity> {
+public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService<ISpringCrudifyEntity> {
 
 	public void setCrudController(ISpringCrudifyController<ISpringCrudifyEntity> crudController) {
 		this.crudController = crudController;
@@ -33,7 +33,7 @@ public class SpringCrudifyEngineService extends AbstractSpringCrudifyService<ISp
 	private boolean authorize_count;
 	private boolean authorize_delete_all;
 
-	public SpringCrudifyEngineService(Class<?> entityClass, ISpringCrudifyController<ISpringCrudifyEntity> crudController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) {
+	public SpringCrudifyEngineRestService(Class<?> entityClass, ISpringCrudifyController<ISpringCrudifyEntity> crudController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) {
 		this.entityClass = entityClass;
 		this.crudController = crudController;
 		this.authorize_creation = authorize_creation;

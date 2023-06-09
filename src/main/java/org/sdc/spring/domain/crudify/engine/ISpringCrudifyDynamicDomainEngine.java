@@ -3,7 +3,7 @@ package org.sdc.spring.domain.crudify.engine;
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
-import org.sdc.spring.domain.crudify.ws.AbstractSpringCrudifyService;
+import org.sdc.spring.domain.crudify.ws.ISpringCrudifyRestService;
 
 public interface ISpringCrudifyDynamicDomainEngine {
 
@@ -13,6 +13,6 @@ public interface ISpringCrudifyDynamicDomainEngine {
 
 	ISpringCrudifyController<?> getController(String name);
 
-	AbstractSpringCrudifyService<?> getService(String name);
+	ISpringCrudifyRestService<?> getService(String name);
 
 }

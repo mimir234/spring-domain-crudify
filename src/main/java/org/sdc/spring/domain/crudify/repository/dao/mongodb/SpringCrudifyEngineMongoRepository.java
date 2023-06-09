@@ -19,5 +19,15 @@ public class SpringCrudifyEngineMongoRepository extends AbstractSpringCrudifyMon
 	protected Class<AbstractSpringCrudifyDTOObject<ISpringCrudifyEntity>> getDTOClass() {
 		return (Class<AbstractSpringCrudifyDTOObject<ISpringCrudifyEntity>>) this.clazz;
 	}
+
+	@Override
+	public void setMagicTenantId(String magicTenantId) {
+		this.magicTenantId = magicTenantId;
+	}
+
+	@Override
+	public void setDtoClass(Class<?> dtoClass) {
+		this.clazz = dtoClass;
+	}
 	
 }

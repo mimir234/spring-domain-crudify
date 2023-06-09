@@ -22,5 +22,9 @@ public interface ISpringCrudifyDAORepository<T> {
 	void delete(T object);
 	
 	long countByTenantId(String tenantId, SpringCrudifyLiteral filter);
+
+	void setMagicTenantId(String magicTenantId);
+
+	void setDtoClass(Class<?> dtoClass);
 	
 }

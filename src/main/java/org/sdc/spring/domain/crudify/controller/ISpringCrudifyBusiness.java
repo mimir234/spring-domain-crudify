@@ -1,9 +1,8 @@
-package org.sdc.spring.domain.crudify.engine;
+package org.sdc.spring.domain.crudify.controller;
 
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 
-public interface ISpringCrudifyDynamicController<Entity extends ISpringCrudifyEntity> {
+public interface ISpringCrudifyBusiness<Entity> {
 
 	void beforeCreate(String tenantId, Entity entity) throws SpringCrudifyEntityException;
 

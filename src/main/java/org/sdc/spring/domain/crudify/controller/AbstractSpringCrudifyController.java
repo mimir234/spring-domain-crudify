@@ -51,6 +51,9 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 
 	@Inject
 	protected Optional<ISpringCrudifyConnector<Entity, List<Entity>>> crudConnector;
+	
+	@Inject
+	protected Optional<ISpringCrudifyBusiness<Entity>> business;
 
 	protected String domain;
 
@@ -125,7 +128,9 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			entity.setUuid(UUID.randomUUID().toString());
 		}
 
-		this.beforeCreate(tenantId, entity);
+		if(this.business.isPresent()) {
+			this.business.get().beforeCreate(tenantId, entity);
+		}
 
 		if (this.crudConnector.isPresent()) {
 			try {
@@ -196,8 +201,10 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	public Entity updateEntity(String tenantId, Entity entity) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Updating entity with Uuid " + entity.getUuid(), tenantId, this.domain);
 		Entity updated = null;
-
-		this.beforeUpdate(tenantId, entity);
+		
+		if(this.business.isPresent()) {
+			this.business.get().beforeUpdate(tenantId, entity);
+		}
 
 		if (this.crudConnector.isPresent()) {
 			try {
@@ -228,10 +235,20 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	public void deleteEntity(String tenantId, String uuid) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Deleting entity with Uuid " + uuid, tenantId, this.domain);
 
+		Entity entity = this.getEntity(tenantId, uuid);
+
+		if (entity == null) {
+			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND,
+					"Entity does not exist");
+		}
+		
+		if(this.business.isPresent()) {
+			this.business.get().beforeDelete(tenantId, entity);
+		}
+		
 		if (this.crudConnector.isPresent()) {
 			try {
 
-				Entity entity = this.factory.newInstance(uuid);
 				Future<Entity> entityResponse = this.crudConnector.get().requestEntity(tenantId, entity, SpringCrudifyConnectorOperation.DELETE);
 
 				while (!entityResponse.isDone()) {
@@ -243,15 +260,6 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
 		} else {
-			Entity entity = this.crudRepository.getOneByUuid(tenantId, uuid);
-
-			if (entity == null) {
-				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND,
-						"Entity does not exist");
-			}
-
-			this.beforeDelete(tenantId, entity);
-
 			this.crudRepository.delete(tenantId, entity);
 		}
 
@@ -276,14 +284,4 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException {
 		return this.crudRepository.getCount(tenantId, filter);
 	}
-
-	// -----------------------------------------------------------//
-	// Abstract methods below to be implemented by sub classes //
-	// -----------------------------------------------------------//
-
-	protected abstract void beforeCreate(String tenantId, Entity entity) throws SpringCrudifyEntityException;
-
-	protected abstract void beforeUpdate(String tenantId, Entity entity) throws SpringCrudifyEntityException;
-
-	protected abstract void beforeDelete(String tenantId, Entity entity) throws SpringCrudifyEntityException;
 }

@@ -15,6 +15,16 @@ The main features offered by this artifact are :
    * Endpoints access restriction based on roles 
    * Sessions (For now, only JWT token is supported)
     
+### RoadMap
+
+ * Terminate the OpenAPI description for endpoints
+ * Add security to OpenAPI description
+ * Implement state machine features
+ * Implement SQL Dao
+ * Implement Spring AOT
+ * Inject DynamicEngine in 
+ * Enable Connector usage in dynamic domain engine
+
 ### Architecture
 
 #### Layers
