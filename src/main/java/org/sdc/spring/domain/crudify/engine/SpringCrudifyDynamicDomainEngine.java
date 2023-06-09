@@ -13,8 +13,8 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.reflections.Reflections;
+import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
-import org.sdc.spring.domain.crudify.controller.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.sdc.spring.domain.crudify.controller.SpringCrudifyEngineController;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;

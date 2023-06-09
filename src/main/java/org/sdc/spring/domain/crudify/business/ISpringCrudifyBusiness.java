@@ -1,4 +1,4 @@
-package org.sdc.spring.domain.crudify.controller;
+package org.sdc.spring.domain.crudify.business;
 
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 
