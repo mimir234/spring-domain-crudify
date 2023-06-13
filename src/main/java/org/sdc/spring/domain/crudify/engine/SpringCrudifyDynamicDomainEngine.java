@@ -340,12 +340,12 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		options.setPatternParser(new PathPatternParser());
 		
 		RequestMappingInfo requestMappingInfoGetAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.GET).options(options).build();
-//		RequestMappingInfo requestMappingInfoDeleteAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.DELETE).options(options).build();
-//		RequestMappingInfo requestMappingInfoCreate = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.POST).options(options).build();
+		RequestMappingInfo requestMappingInfoDeleteAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.DELETE).options(options).build();
+		RequestMappingInfo requestMappingInfoCreate = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.POST).options(options).build();
 		RequestMappingInfo requestMappingInfoCount = RequestMappingInfo.paths(baseUrl+"/count").methods(RequestMethod.GET).options(options).build();
-//		RequestMappingInfo requestMappingInfoGetOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.GET).options(options).build();
-//		RequestMappingInfo requestMappingInfoUpdate = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.PATCH).options(options).build();
-//		RequestMappingInfo requestMappingInfoDeleteOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.DELETE).options(options).build();
+		RequestMappingInfo requestMappingInfoGetOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.GET).options(options).build();
+		RequestMappingInfo requestMappingInfoUpdate = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.PATCH).options(options).build();
+		RequestMappingInfo requestMappingInfoDeleteOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.DELETE).options(options).build();
 		
 		Tag tag = new Tag().name("Domain "+ws.getDomain().toLowerCase());
 		this.openApi.addTagsItem(tag);
@@ -366,30 +366,30 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetAll, ws, ISpringCrudifyRestService.class.getMethod("getEntities", String.class, SpringCrudifyReadOutputMode.class, Integer.class, Integer.class, String.class, String.class));
 			this.openApi.path(baseUrl, pathItemBase.get(templateOpenApi.getPaths().get(baseUrl).getGet()));
 		}
-//		if( authorize_delete_all ) {
-//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, ws, ISpringCrudifyRestService.class.getMethod("deleteAll", String.class));
-//			this.openApi.path(baseUrl,pathItemBase.delete(templateOpenApi.getPaths().get(baseUrl).getDelete()));
-//		}
-//		if( authorize_creation ) {
-//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, ws, ISpringCrudifyRestService.class.getMethod("createEntity", ISpringCrudifyEntity.class, String.class));
-//			this.openApi.path(baseUrl, pathItemBase.post(templateOpenApi.getPaths().get(baseUrl).getPost()));
-//		}
+		if( authorize_delete_all ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, ws, ISpringCrudifyRestService.class.getMethod("deleteAll", String.class));
+			this.openApi.path(baseUrl,pathItemBase.delete(templateOpenApi.getPaths().get(baseUrl).getDelete()));
+		}
+		if( authorize_creation ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, ws, ISpringCrudifyRestService.class.getMethod("createEntity", ISpringCrudifyEntity.class, String.class));
+			this.openApi.path(baseUrl, pathItemBase.post(templateOpenApi.getPaths().get(baseUrl).getPost()));
+		}
 		if( authorize_count ) {
 			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCount, ws, ISpringCrudifyRestService.class.getMethod("getCount", String.class));
 			this.openApi.path(baseUrl+"/count", pathItemCount.get(templateOpenApi.getPaths().get(baseUrl+"/count").getGet()));
 		}
-//		if( authorize_read_one ) {
-//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, ws, ISpringCrudifyRestService.class.getMethod("getEntity", String.class, String.class));
-//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.get(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getGet()));
-//		}
-//		if( authorize_update_one ) {
-//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, ws, ISpringCrudifyRestService.class.getMethod("updateEntity", String.class, ISpringCrudifyEntity.class, String.class));
-//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.patch(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getPatch()));
-//		}
-//		if( authorize_delete_one ) {
-//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, ws, ISpringCrudifyRestService.class.getMethod("deleteEntity", String.class, String.class));
-//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.delete(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getDelete()));
-//		}
+		if( authorize_read_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, ws, ISpringCrudifyRestService.class.getMethod("getEntity", String.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.get(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getGet()));
+		}
+		if( authorize_update_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, ws, ISpringCrudifyRestService.class.getMethod("updateEntity", String.class, ISpringCrudifyEntity.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.patch(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getPatch()));
+		}
+		if( authorize_delete_one ) {
+			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, ws, ISpringCrudifyRestService.class.getMethod("deleteEntity", String.class, String.class));
+			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.delete(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getDelete()));
+		}
 
 		Info infos = this.openApi.getInfo();
 		String description = infos.getDescription() + "       The configured Magic Tenant ID is : 0";
