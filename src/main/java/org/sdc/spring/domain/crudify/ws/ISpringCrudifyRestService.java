@@ -7,6 +7,12 @@ import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthor
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> {
 
@@ -14,18 +20,31 @@ public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> 
 
 	List<ISpringCrudifyAuthorization> createAuthorizations();
 
-	ResponseEntity<?> createEntity(Entity entity, String tenantId);
+	@RequestMapping(value = "", method = RequestMethod.POST)
+	ResponseEntity<?> createEntity(@RequestBody(required = true) Entity entity, @RequestHeader(name = "tenantId") String tenantId);
 
-	ResponseEntity<?> getEntities(String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString);
+	@RequestMapping(value = "", method = RequestMethod.GET)
+	ResponseEntity<?> getEntities(
+			@RequestHeader(name = "tenantId") String tenantId,
+			@RequestParam(name = "mode", defaultValue = "full") SpringCrudifyReadOutputMode mode,
+			@RequestParam(name = "pageSize", defaultValue = "0") Integer pageSize,
+			@RequestParam(name = "pageIndex", defaultValue = "0") Integer pageIndex,
+			@RequestParam(name = "filter", defaultValue = "") String filterString,
+			@RequestParam(name = "sort", defaultValue = "") String sortString);
 
-	ResponseEntity<?> getEntity(String tenantId, String uuid);
+	@RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
+	ResponseEntity<?> getEntity(@RequestHeader(name = "tenantId") String tenantId, @PathVariable(name = "uuid") String uuid);
 
-	ResponseEntity<?> updateEntity(String uuid, Entity entity, String tenantId);
+	@RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
+	ResponseEntity<?> updateEntity(@PathVariable(name = "uuid") String uuid, @RequestBody(required = true) Entity entity, @RequestHeader String tenantId);
 
+	@RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
 	ResponseEntity<?> deleteEntity(String uuid, String tenantId);
 
-	ResponseEntity<?> deleteAll(String tenantId);
+	@RequestMapping(value = "", method = RequestMethod.DELETE)
+	ResponseEntity<?> deleteAll(@RequestHeader(name = "tenantId") String tenantId);
 
+	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	ResponseEntity<?> getCount(String tenantId);
 
 	void authorize(boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one,

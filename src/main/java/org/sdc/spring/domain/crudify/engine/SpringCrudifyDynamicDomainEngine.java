@@ -22,12 +22,11 @@ import org.sdc.spring.domain.crudify.repository.SpringCrudifyEngineRepository;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dao.SpringCrudifyDao;
 import org.sdc.spring.domain.crudify.repository.dao.mongodb.SpringCrudifyEngineMongoRepository;
-import org.sdc.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
+import org.sdc.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.sdc.spring.domain.crudify.ws.ISpringCrudifyRestService;
 import org.sdc.spring.domain.crudify.ws.SpringCrudifyEngineRestService;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,7 +102,13 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		
 		this.openApiHelper = new SpringCrudifyOpenAPIHelper();
 
-		log.info("== Starting Dynamic Domain Engine ==");
+		log.info("============================================");
+		log.info("======                                ======");
+		log.info("====== Starting Dynamic Domain Engine ======");
+		log.info("======                                ======");
+		log.info("============================================");
+		log.info("Version: {}", this.getClass().getPackage().getImplementationVersion());
+		
 		this.services = new ArrayList<ISpringCrudifyRestService<?>>();
 		
 		for (String pack : this.scanPackages) {
@@ -307,7 +312,7 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 			repo.setEntityClass(dtoClass);
 		}
 		
-		Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>> repoObj = null ;//Optional.ofNullable(repo);
+		Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>> repoObj = Optional.ofNullable(repo);
 		
 		if( controller == null ) {
 			controller = new SpringCrudifyEngineController(entityClass, repoObj, connectorObj, businessObj);
@@ -349,10 +354,10 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		
 		Tag tag = new Tag().name("Domain "+ws.getDomain().toLowerCase());
 		this.openApi.addTagsItem(tag);
-		
-		ISpringCrudifyEntity entity = SpringCrudifyEntityHelper.getOneInstance((Class<ISpringCrudifyEntity>) entityClass);
-		
-		OpenAPI templateOpenApi = this.openApiHelper.getOpenApi(domain.toLowerCase(), entityClass.getSimpleName(), entity.getOpenApiSchema());
+	
+		SpringCrudifyEntity entityAnnotation = ((Class<ISpringCrudifyEntity>) entityClass).getAnnotation(SpringCrudifyEntity.class);
+
+		OpenAPI templateOpenApi = this.openApiHelper.getOpenApi(domain.toLowerCase(), entityClass.getSimpleName(), entityAnnotation.openApiSchemas());
 		PathItem pathItemBase = new PathItem();
 		PathItem pathItemCount = new PathItem();
 		PathItem pathItemUuid = new PathItem();

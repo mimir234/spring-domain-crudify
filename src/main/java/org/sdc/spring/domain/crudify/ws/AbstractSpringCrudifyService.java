@@ -126,8 +126,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "", method = RequestMethod.POST)
-	public ResponseEntity<?> createEntity(@RequestBody(required = true) Entity entity, @RequestHeader(name = "tenantId") String tenantId) {
+	public ResponseEntity<?> createEntity(Entity entity, String tenantId) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_CREATION) {
@@ -154,14 +153,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	@RequestMapping(value = "", method = RequestMethod.GET)
-	public ResponseEntity<?> getEntities(
-			@RequestHeader(name = "tenantId") String tenantId,
-			@RequestParam(name = "mode", defaultValue = "full") SpringCrudifyReadOutputMode mode,
-			@RequestParam(name = "pageSize", defaultValue = "0") Integer pageSize,
-			@RequestParam(name = "pageIndex", defaultValue = "0") Integer pageIndex,
-			@RequestParam(name = "filter", defaultValue = "") String filterString,
-			@RequestParam(name = "sort", defaultValue = "") String sortString) {
+	public ResponseEntity<?> getEntities( String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
@@ -220,8 +212,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
-	public ResponseEntity<?> getEntity(@RequestHeader(name = "tenantId") String tenantId, @PathVariable(name = "uuid") String uuid) {
+	public ResponseEntity<?> getEntity(String tenantId, String uuid) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_GET_ONE) {
@@ -248,9 +239,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
-	public ResponseEntity<?> updateEntity(@PathVariable(name = "uuid") String uuid, @RequestBody(required = true) Entity entity,
-			@RequestHeader String tenantId) {
+	public ResponseEntity<?> updateEntity(String uuid, Entity entity, String tenantId) {
 
 		ResponseEntity<?> response = null;
 
@@ -279,7 +268,6 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
 	public ResponseEntity<?> deleteEntity(@PathVariable(name = "uuid") String uuid, @RequestHeader(name = "tenantId") String tenantId) {
 
 		if (this.AUTHORIZE_DELETE_ONE) {
@@ -308,8 +296,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	public ResponseEntity<?> deleteAll(@RequestHeader(name = "tenantId") String tenantId) {
+	public ResponseEntity<?> deleteAll(String tenantId) {
 
 		if (this.AUTHORIZE_DELETE_ALL) {
 			ResponseEntity<?> response = null;
@@ -337,7 +324,6 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	@RequestMapping(value = "/count", method = RequestMethod.GET)
 	public ResponseEntity<?> getCount(@RequestHeader(name = "tenantId") String tenantId) {
 
 		if (this.AUTHORIZE_COUNT) {

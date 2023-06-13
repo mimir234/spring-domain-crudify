@@ -41,4 +41,6 @@ public @interface SpringCrudifyEntity {
 	
 	String dao() default "";
 
+	String openApiSchemas() default "";
+
 }
