@@ -100,11 +100,14 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> createEntity(Entity entity, String tenantId) {
+	public ResponseEntity<?> createEntity(String entity__, String tenantId) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_CREATION) {
 			try {
+				
+				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.getEntityClazz());
+				
 				entity = this.crudController.createEntity(tenantId, entity);
 				response = new ResponseEntity<>(entity, HttpStatus.CREATED);
 			} catch (SpringCrudifyEntityException e) {
@@ -127,7 +130,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public ResponseEntity<?> getEntities( String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString) {
+	public ResponseEntity<?> getEntities(String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
@@ -213,12 +216,15 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> updateEntity(String uuid, Entity entity, String tenantId) {
+	public ResponseEntity<?> updateEntity(String uuid, String entity__, String tenantId) {
 
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_UPDATE) {
 			try {
+				
+				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.getEntityClazz());
+				
 				entity.setUuid(uuid);
 				Entity updatedEntity = this.crudController.updateEntity(tenantId, entity);
 				response = new ResponseEntity<>(updatedEntity, HttpStatus.OK);

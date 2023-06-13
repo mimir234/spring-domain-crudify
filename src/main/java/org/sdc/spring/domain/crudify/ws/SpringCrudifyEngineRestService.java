@@ -5,6 +5,7 @@ import java.util.List;
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;

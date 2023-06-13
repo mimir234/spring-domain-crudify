@@ -21,7 +21,7 @@ public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> 
 	List<ISpringCrudifyAuthorization> createAuthorizations();
 
 	@RequestMapping(value = "", method = RequestMethod.POST)
-	ResponseEntity<?> createEntity(@RequestBody(required = true) Entity entity, @RequestHeader(name = "tenantId") String tenantId);
+	ResponseEntity<?> createEntity(@RequestBody(required = true) String entity, @RequestHeader(name = "tenantId") String tenantId);
 
 	@RequestMapping(value = "", method = RequestMethod.GET)
 	ResponseEntity<?> getEntities(
@@ -36,7 +36,7 @@ public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> 
 	ResponseEntity<?> getEntity(@RequestHeader(name = "tenantId") String tenantId, @PathVariable(name = "uuid") String uuid);
 
 	@RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
-	ResponseEntity<?> updateEntity(@PathVariable(name = "uuid") String uuid, @RequestBody(required = true) Entity entity, @RequestHeader String tenantId);
+	ResponseEntity<?> updateEntity(@PathVariable(name = "uuid") String uuid, @RequestBody(required = true) String entity, @RequestHeader String tenantId);
 
 	@RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
 	ResponseEntity<?> deleteEntity(String uuid, String tenantId);

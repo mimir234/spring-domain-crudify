@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
+import org.sdc.spring.domain.crudify.events.ISpringCrudifyEventPublisher;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
@@ -41,5 +42,7 @@ public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity> {
 	public void setConnector(Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj);
 
 	public void setbusiness(Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> businessObj);
+
+	public void setEventPublisher(Optional<ISpringCrudifyEventPublisher> eventObj);
 
 }
