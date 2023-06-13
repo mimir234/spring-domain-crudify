@@ -6,7 +6,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
-import org.sdc.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +18,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-public abstract class AbstractSpringCrudifyMongoRepository<T extends AbstractSpringCrudifyDTOObject<?>> implements ISpringCrudifyDAORepository<T> {
+public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrudifyDTOObject<ISpringCrudifyEntity>> implements ISpringCrudifyDAORepository<T> {
 
 	@Inject
 	protected MongoTemplate mongo;

@@ -5,21 +5,23 @@ package org.sdc.spring.domain.crudify.repository.dao;
 
 import java.util.List;
 
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.Pageable;
 
-public interface ISpringCrudifyDAORepository<T> {
+public interface ISpringCrudifyDAORepository<DTO extends ISpringCrudifyDTOObject<ISpringCrudifyEntity>> {
 
-	List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort);
+	List<DTO> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort);
 
-	T findOneByUuidAndTenantId(String uuid, String tenantId);
+	DTO findOneByUuidAndTenantId(String uuid, String tenantId);
 
-	T findOneByIdAndTenantId(String id, String tenantId);
+	DTO findOneByIdAndTenantId(String id, String tenantId);
 
-	T save(T object);
+	DTO save(DTO object);
 
-	void delete(T object);
+	void delete(DTO object);
 	
 	long countByTenantId(String tenantId, SpringCrudifyLiteral filter);
 

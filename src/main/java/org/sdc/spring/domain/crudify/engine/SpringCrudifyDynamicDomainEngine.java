@@ -22,6 +22,7 @@ import org.sdc.spring.domain.crudify.repository.SpringCrudifyEngineRepository;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dao.SpringCrudifyDao;
 import org.sdc.spring.domain.crudify.repository.dao.mongodb.SpringCrudifyEngineMongoRepository;
+import org.sdc.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntity;
@@ -96,6 +97,7 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		return this.restServices.get(name);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Bean
 	protected List<ISpringCrudifyRestService<?>> engineServices() throws SpringCrudifyEngineException {
 		
@@ -144,50 +146,50 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 				
 				// Web Service
 				String ws__ = entityAnnotation.ws();
-				ISpringCrudifyRestService<?> ws = null;
+				ISpringCrudifyRestService<ISpringCrudifyEntity> ws = null;
 				
 				if( ws__ != null && !ws__.isEmpty() ) {					
-					ws = (ISpringCrudifyRestService<?>) this.getObjectFromConfiguration(ws__, ISpringCrudifyRestService.class);
+					ws = (ISpringCrudifyRestService<ISpringCrudifyEntity>) this.getObjectFromConfiguration(ws__, ISpringCrudifyRestService.class);
 				}
 				
 				// Controller
 				String controller__ = entityAnnotation.controller();
-				ISpringCrudifyController<?> controller = null;
+				ISpringCrudifyController<ISpringCrudifyEntity> controller = null;
 				
 				if( controller__ != null && !controller__.isEmpty() ) {					
-					controller = (ISpringCrudifyController<?>) this.getObjectFromConfiguration(controller__, ISpringCrudifyController.class);
+					controller = (ISpringCrudifyController<ISpringCrudifyEntity>) this.getObjectFromConfiguration(controller__, ISpringCrudifyController.class);
 				}
 
 				// Business
 				String business__ = entityAnnotation.business();
-				ISpringCrudifyBusiness<?> business = null;
+				ISpringCrudifyBusiness<ISpringCrudifyEntity> business = null;
 				
 				if( business__ != null && !business__.isEmpty() ) {					
-					business = (ISpringCrudifyBusiness<?>) this.getObjectFromConfiguration(business__, ISpringCrudifyBusiness.class);
+					business = (ISpringCrudifyBusiness<ISpringCrudifyEntity>) this.getObjectFromConfiguration(business__, ISpringCrudifyBusiness.class);
 				}
 				
 				// Connector 
 				String connector__ = entityAnnotation.connector();
-				ISpringCrudifyConnector<?, ?> connector = null;
+				ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>> connector = null;
 				
 				if( connector__ != null && !connector__.isEmpty() ) {					
-					connector = (ISpringCrudifyConnector<?, ?>) this.getObjectFromConfiguration(connector__, ISpringCrudifyConnector.class);
+					connector = (ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>) this.getObjectFromConfiguration(connector__, ISpringCrudifyConnector.class);
 				}
 				
 				// Repository
 				String repo__ = entityAnnotation.repository();
-				ISpringCrudifyRepository<?> repo = null;
+				ISpringCrudifyRepository<ISpringCrudifyEntity> repo = null;
 				
 				if( repo__ != null && !repo__.isEmpty() ) {					
-					repo = (ISpringCrudifyRepository<?>) this.getObjectFromConfiguration(repo__, ISpringCrudifyRepository.class);
+					repo = (ISpringCrudifyRepository<ISpringCrudifyEntity>) this.getObjectFromConfiguration(repo__, ISpringCrudifyRepository.class);
 				}
 				
 				//DAO
 				String dao__ = entityAnnotation.repository();
-				ISpringCrudifyDAORepository<?> dao = null;
+				ISpringCrudifyDAORepository<ISpringCrudifyDTOObject<ISpringCrudifyEntity>> dao = null;
 				
 				if( dao__ != null && !dao__.isEmpty() ) {					
-					dao = (ISpringCrudifyDAORepository<?>) this.getObjectFromConfiguration(dao__, ISpringCrudifyDAORepository.class);
+					dao = (ISpringCrudifyDAORepository<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>) this.getObjectFromConfiguration(dao__, ISpringCrudifyDAORepository.class);
 				}
 
 				try {
@@ -264,7 +266,7 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	private void createDynamicDomain(List<ISpringCrudifyRestService<?>> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyRestService<?> ws, ISpringCrudifyController<?> controller, ISpringCrudifyBusiness<?> business, ISpringCrudifyConnector<?, ?> connector, ISpringCrudifyRepository<?> repo, ISpringCrudifyDAORepository<?> dao, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+	private void createDynamicDomain(List<ISpringCrudifyRestService<?>> services, Class<?> entityClass, Class<?> dtoClass, SpringCrudifyDao db, ISpringCrudifyRestService<ISpringCrudifyEntity> ws, ISpringCrudifyController<ISpringCrudifyEntity> controller, ISpringCrudifyBusiness<ISpringCrudifyEntity> business, ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>> connector, ISpringCrudifyRepository<ISpringCrudifyEntity> repo, ISpringCrudifyDAORepository<ISpringCrudifyDTOObject<ISpringCrudifyEntity>> dao, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
 		
 		/*
 		 * TODO: THIS METHOD NEEDS TO BE REFACTORED
@@ -305,11 +307,13 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 			repo.setEntityClass(dtoClass);
 		}
 		
+		Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>> repoObj = null ;//Optional.ofNullable(repo);
+		
 		if( controller == null ) {
-			controller = new SpringCrudifyEngineController(entityClass, (ISpringCrudifyRepository<ISpringCrudifyEntity>) repo, connectorObj, businessObj);
+			controller = new SpringCrudifyEngineController(entityClass, repoObj, connectorObj, businessObj);
 		} else {
 			controller.setEntityClass(entityClass);
-			controller.setRepository(repo);
+			controller.setRepository((Optional<?>) repoObj);
 			controller.setConnector(connectorObj);
 			controller.setbusiness(businessObj);
 		}
@@ -336,12 +340,12 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 		options.setPatternParser(new PathPatternParser());
 		
 		RequestMappingInfo requestMappingInfoGetAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.GET).options(options).build();
-		RequestMappingInfo requestMappingInfoDeleteAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.DELETE).options(options).build();
-		RequestMappingInfo requestMappingInfoCreate = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.POST).options(options).build();
+//		RequestMappingInfo requestMappingInfoDeleteAll = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.DELETE).options(options).build();
+//		RequestMappingInfo requestMappingInfoCreate = RequestMappingInfo.paths(baseUrl).methods(RequestMethod.POST).options(options).build();
 		RequestMappingInfo requestMappingInfoCount = RequestMappingInfo.paths(baseUrl+"/count").methods(RequestMethod.GET).options(options).build();
-		RequestMappingInfo requestMappingInfoGetOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.GET).options(options).build();
-		RequestMappingInfo requestMappingInfoUpdate = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.PATCH).options(options).build();
-		RequestMappingInfo requestMappingInfoDeleteOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.DELETE).options(options).build();
+//		RequestMappingInfo requestMappingInfoGetOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.GET).options(options).build();
+//		RequestMappingInfo requestMappingInfoUpdate = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.PATCH).options(options).build();
+//		RequestMappingInfo requestMappingInfoDeleteOne = RequestMappingInfo.paths(baseUrl+"/{uuid}").methods(RequestMethod.DELETE).options(options).build();
 		
 		Tag tag = new Tag().name("Domain "+ws.getDomain().toLowerCase());
 		this.openApi.addTagsItem(tag);
@@ -362,30 +366,30 @@ public class SpringCrudifyDynamicDomainEngine implements ISpringCrudifyDynamicDo
 			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetAll, ws, ISpringCrudifyRestService.class.getMethod("getEntities", String.class, SpringCrudifyReadOutputMode.class, Integer.class, Integer.class, String.class, String.class));
 			this.openApi.path(baseUrl, pathItemBase.get(templateOpenApi.getPaths().get(baseUrl).getGet()));
 		}
-		if( authorize_delete_all ) {
-			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, ws, ISpringCrudifyRestService.class.getMethod("deleteAll", String.class));
-			this.openApi.path(baseUrl,pathItemBase.delete(templateOpenApi.getPaths().get(baseUrl).getDelete()));
-		}
-		if( authorize_creation ) {
-			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, ws, ISpringCrudifyRestService.class.getMethod("createEntity", ISpringCrudifyEntity.class, String.class));
-			this.openApi.path(baseUrl, pathItemBase.post(templateOpenApi.getPaths().get(baseUrl).getPost()));
-		}
+//		if( authorize_delete_all ) {
+//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteAll, ws, ISpringCrudifyRestService.class.getMethod("deleteAll", String.class));
+//			this.openApi.path(baseUrl,pathItemBase.delete(templateOpenApi.getPaths().get(baseUrl).getDelete()));
+//		}
+//		if( authorize_creation ) {
+//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCreate, ws, ISpringCrudifyRestService.class.getMethod("createEntity", ISpringCrudifyEntity.class, String.class));
+//			this.openApi.path(baseUrl, pathItemBase.post(templateOpenApi.getPaths().get(baseUrl).getPost()));
+//		}
 		if( authorize_count ) {
 			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoCount, ws, ISpringCrudifyRestService.class.getMethod("getCount", String.class));
 			this.openApi.path(baseUrl+"/count", pathItemCount.get(templateOpenApi.getPaths().get(baseUrl+"/count").getGet()));
 		}
-		if( authorize_read_one ) {
-			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, ws, ISpringCrudifyRestService.class.getMethod("getEntity", String.class, String.class));
-			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.get(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getGet()));
-		}
-		if( authorize_update_one ) {
-			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, ws, ISpringCrudifyRestService.class.getMethod("updateEntity", String.class, ISpringCrudifyEntity.class, String.class));
-			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.patch(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getPatch()));
-		}
-		if( authorize_delete_one ) {
-			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, ws, ISpringCrudifyRestService.class.getMethod("deleteEntity", String.class, String.class));
-			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.delete(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getDelete()));
-		}
+//		if( authorize_read_one ) {
+//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoGetOne, ws, ISpringCrudifyRestService.class.getMethod("getEntity", String.class, String.class));
+//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.get(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getGet()));
+//		}
+//		if( authorize_update_one ) {
+//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoUpdate, ws, ISpringCrudifyRestService.class.getMethod("updateEntity", String.class, ISpringCrudifyEntity.class, String.class));
+//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.patch(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getPatch()));
+//		}
+//		if( authorize_delete_one ) {
+//			this.requestMappingHandlerMapping.registerMapping(requestMappingInfoDeleteOne, ws, ISpringCrudifyRestService.class.getMethod("deleteEntity", String.class, String.class));
+//			this.openApi.path(baseUrl+"/{uuid}", pathItemUuid.delete(templateOpenApi.getPaths().get(baseUrl+"/{uuid}").getDelete()));
+//		}
 
 		Info infos = this.openApi.getInfo();
 		String description = infos.getDescription() + "       The configured Magic Tenant ID is : 0";

@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EnableMongoRepositories
-public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> implements ISpringCrudifyRepository<Entity> {
+public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<ISpringCrudifyEntity>> implements ISpringCrudifyRepository<Entity> {
 	
 	@Inject
 	protected ISpringCrudifyDAORepository<Dto> daoRepository;

@@ -69,32 +69,6 @@ public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService
 	protected Class<ISpringCrudifyEntity> getEntityClazz() {
 		return (Class<ISpringCrudifyEntity>) this.entityClass;
 	}
-	
-	public ResponseEntity<?> createEntity(@RequestBody String entity, @RequestHeader String tenantId) {
-		
-		ObjectMapper mapper = new ObjectMapper();
-		Object entityObj = null;
-		try {
-			entityObj = mapper.readValue(entity, this.entityClass);
-		} catch (JsonProcessingException e) {
-			return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.BAD_REQUEST);
-		}
-		
-		return this.createEntity((ISpringCrudifyEntity) entityObj, tenantId);
-	}
-	
-	public ResponseEntity<?> updateEntity(@PathVariable String uuid, @RequestBody String entity, @RequestHeader String tenantId) {
-		
-		ObjectMapper mapper = new ObjectMapper();
-		Object entityObj = null;
-		try {
-			entityObj = mapper.readValue(entity, this.entityClass);
-		} catch (JsonProcessingException e) {
-			return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.BAD_REQUEST);
-		}
-		
-		return this.updateEntity(uuid, (ISpringCrudifyEntity) entityObj, tenantId);
-	}
 
 	@Override
 	public void authorize(boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one,

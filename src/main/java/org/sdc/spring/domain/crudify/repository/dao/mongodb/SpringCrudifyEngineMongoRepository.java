@@ -1,10 +1,10 @@
 package org.sdc.spring.domain.crudify.repository.dao.mongodb;
 
-import org.sdc.spring.domain.crudify.repository.dto.AbstractSpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-public class SpringCrudifyEngineMongoRepository extends AbstractSpringCrudifyMongoRepository<AbstractSpringCrudifyDTOObject<ISpringCrudifyEntity>>{
+public class SpringCrudifyEngineMongoRepository extends AbstractSpringCrudifyMongoRepository<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>{
 
 	private Class<?> clazz;
 
@@ -16,8 +16,8 @@ public class SpringCrudifyEngineMongoRepository extends AbstractSpringCrudifyMon
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	protected Class<AbstractSpringCrudifyDTOObject<ISpringCrudifyEntity>> getDTOClass() {
-		return (Class<AbstractSpringCrudifyDTOObject<ISpringCrudifyEntity>>) this.clazz;
+	protected Class<ISpringCrudifyDTOObject<ISpringCrudifyEntity>> getDTOClass() {
+		return (Class<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>) this.clazz;
 	}
 
 	@Override

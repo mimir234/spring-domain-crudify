@@ -13,9 +13,9 @@ public class SpringCrudifyEngineController extends AbstractSpringCrudifyControll
 
 	private Class<?> entityClass;
 
-	public SpringCrudifyEngineController(Class<?> entityClass, ISpringCrudifyRepository<ISpringCrudifyEntity> crudRepository, Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> crudConnector, Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business) {
+	public SpringCrudifyEngineController(Class<?> entityClass, Optional<?> repoObj, Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> crudConnector, Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business) {
 		this.entityClass = entityClass;
-		this.crudRepository = crudRepository;
+		this.crudRepository = (Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>>) repoObj;
 		this.crudConnector = crudConnector;
 		this.business = business;
 		
@@ -34,18 +34,18 @@ public class SpringCrudifyEngineController extends AbstractSpringCrudifyControll
 	}
 
 	@Override
-	public void setRepository(ISpringCrudifyRepository<?> repository) {
-		this.crudRepository = (ISpringCrudifyRepository<ISpringCrudifyEntity>) repository;
+	public void setRepository(Optional<?> repository) {
+		this.crudRepository = (Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>>) repository;
 	}
 
 	@Override
-	public void setConnector(Optional<?> connectorObj) {
-		this.crudConnector = (Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>>) connectorObj;
+	public void setConnector(Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj) {
+		this.crudConnector = connectorObj;
 	}
 
 	@Override
-	public void setbusiness(Optional<?> business) {
-		this.business = (Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>>) business;
+	public void setbusiness(Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business) {
+		this.business = business;
 		
 	}
 

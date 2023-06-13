@@ -6,6 +6,8 @@ package org.sdc.spring.domain.crudify.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
+import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
@@ -34,10 +36,10 @@ public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity> {
 
 	public void setEntityClass(Class<?> entityClass);
 
-	public void setRepository(ISpringCrudifyRepository<?> repo);
+	public void setRepository(Optional<?> repoObj);
 
-	public void setConnector(Optional<?> connectorObj);
+	public void setConnector(Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj);
 
-	public void setbusiness(Optional<?> businessObj);
+	public void setbusiness(Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> businessObj);
 
 }

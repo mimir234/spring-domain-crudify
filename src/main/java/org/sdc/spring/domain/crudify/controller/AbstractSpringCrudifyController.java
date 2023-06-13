@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import javax.inject.Inject;
@@ -16,6 +17,8 @@ import javax.inject.Inject;
 import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector.SpringCrudifyConnectorOperation;
+import org.sdc.spring.domain.crudify.connector.SpringCrudifyConnectorException;
+import org.sdc.spring.domain.crudify.events.ISpringCrudifyEventPublisher;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
@@ -48,10 +51,13 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	 * The repository used to store the entity
 	 */
 	@Inject
-	protected ISpringCrudifyRepository<Entity> crudRepository;
+	protected Optional<ISpringCrudifyRepository<Entity>> crudRepository;
 
 	@Inject
 	protected Optional<ISpringCrudifyConnector<Entity, List<Entity>>> crudConnector;
+	
+	@Inject
+	protected Optional<ISpringCrudifyEventPublisher> eventPublisher;
 	
 	@Inject
 	protected Optional<ISpringCrudifyBusiness<Entity>> business;
@@ -109,8 +115,8 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
 
-		} else {
-			entity = this.crudRepository.getOneByUuid(tenantId, uuid);
+		} else if (this.crudRepository.isPresent()) {
+			entity = this.crudRepository.get().getOneByUuid(tenantId, uuid);
 		}
 
 		if (entity == null) {
@@ -146,14 +152,14 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			} catch (Exception e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
-		} else {
+		} else if (this.crudRepository.isPresent()) {
 
-			if (this.crudRepository.doesExists(tenantId, entity)) {
+			if (this.crudRepository.get().doesExists(tenantId, entity)) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_ALREADY_EXISTS,
 						"Entity already exists");
 			}
 
-			this.crudRepository.save(tenantId, entity);
+			this.crudRepository.get().save(tenantId, entity);
 		}
 
 		return entity;
@@ -185,8 +191,8 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			} catch (Exception e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
-		} else {
-			entities = this.crudRepository.getEntities(tenantId, pageSize, pageIndex, filter, sort);
+		} else if (this.crudRepository.isPresent()) {
+			entities = this.crudRepository.get().getEntities(tenantId, pageSize, pageIndex, filter, sort);
 		}
 
 		switch (mode) {
@@ -220,13 +226,13 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			} catch (Exception e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
-		} else {
-			if (!this.crudRepository.doesExists(tenantId, entity)) {
+		} else if (this.crudRepository.isPresent()) {
+			if (!this.crudRepository.get().doesExists(tenantId, entity)) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND,
 						"Entity does not exist");
 			}
 
-			updated = this.crudRepository.update(tenantId, entity);
+			updated = this.crudRepository.get().update(tenantId, entity);
 		}
 
 		return updated;
@@ -260,8 +266,8 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			} catch (Exception e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
 			}
-		} else {
-			this.crudRepository.delete(tenantId, entity);
+		} else if (this.crudRepository.isPresent()) {
+			this.crudRepository.get().delete(tenantId, entity);
 		}
 
 	}
@@ -269,7 +275,7 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	@Override
 	public void deleteEntities(final String tenantId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Deleting all entities", tenantId, this.domain);
-		List<Entity> entities = this.crudRepository.getEntities(tenantId, 0, 1, null, null);
+		List<Entity> entities = this.crudRepository.get().getEntities(tenantId, 0, 1, null, null);
 
 		for (Entity s : entities) {
 			try {
@@ -283,6 +289,20 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 
 	@Override
 	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException {
-		return this.crudRepository.getCount(tenantId, filter);
+		if (this.crudConnector.isPresent()) {
+			try {
+				Future<List<Entity>> list = this.crudConnector.get().requestList(tenantId, null, null);
+				while (!list.isDone()) {
+					Thread.sleep(250);
+				}
+				return list.get().size();
+			} catch (InterruptedException | ExecutionException | SpringCrudifyConnectorException e) {
+				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.CONNECTOR_ERROR, e);
+			}
+		} else if (this.crudRepository.isPresent()) {
+			return this.crudRepository.get().getCount(tenantId, filter);
+		}
+		return 0;
+
 	}
 }
