@@ -3,7 +3,6 @@
  *******************************************************************************/
 package org.sdc.spring.domain.crudify.repository;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +12,9 @@ import javax.inject.Inject;
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOFactory;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.repository.dto.SpringCrudifyDtoHelper;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.PageRequest;
@@ -33,7 +33,6 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
 
 	protected String domain;
 
-	private ISpringCrudifyEntityFactory<Entity> entityFactory;
 	private ISpringCrudifyDTOFactory<Entity, Dto> dtoFactory;
 	
 	@SuppressWarnings("unchecked")
@@ -43,27 +42,13 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
     	Class<Entity> entityClass = this.getEntityClass();
     	Class<Dto> dtoClass = this.getDTOClass();
     	
-    	Constructor<Entity> entityConstructor;
-    	Constructor<Dto> dtoConstructor;
+		this.domain = SpringCrudifyEntityHelper.getDomain((Class<ISpringCrudifyEntity>) entityClass);
 		try {
-			
-			entityConstructor = entityClass.getConstructor();
-			Entity entity = (Entity) entityConstructor.newInstance();
-			if( entity.getDomain().isEmpty() ) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-			
-			this.entityFactory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
-			
-			dtoConstructor = dtoClass.getConstructor();
-			Dto dto = (Dto) dtoConstructor.newInstance();
-			this.dtoFactory = (ISpringCrudifyDTOFactory<Entity, Dto>) dto.getFactory();
-			
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.entityFactory = null;
+			this.dtoFactory = (ISpringCrudifyDTOFactory<Entity, Dto>) SpringCrudifyDtoHelper.getFactory((Class<ISpringCrudifyDTOObject<ISpringCrudifyEntity>>) dtoClass);
+		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
     }
 

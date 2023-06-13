@@ -17,6 +17,7 @@ import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.connector.SpringCrudifyConnectorException;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -48,30 +49,11 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 
 	private String domain;
 
-	private ISpringCrudifyEntityFactory<T> factory;
-
 	@SuppressWarnings("unchecked")
 	@PostConstruct
 	private void getDomain() {
 		this.setEntityClazz();
-		Constructor<T> constructor;
-		try {
-
-			constructor = this.clazz.getConstructor();
-			T entity = (T) constructor.newInstance();
-			if (entity.getDomain().isEmpty()) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-
-			this.factory = (ISpringCrudifyEntityFactory<T>) entity.getFactory();
-
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.factory = null;
-		}
+		this.domain = SpringCrudifyEntityHelper.getDomain((Class<ISpringCrudifyEntity>) this.clazz);
 	}
 	
 	/*
@@ -93,7 +75,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				Object locker = new Object();
 
 				SpringCrudifyAsyncConnectorEnvelop<S> message = new SpringCrudifyAsyncConnectorEnvelop<S>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, null, null, operation,
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, domain, null, operation,
 						list, null, null);
 				
 				try {
@@ -173,7 +155,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				Object locker = new Object();
 
 				SpringCrudifyAsyncConnectorEnvelop<T> message = new SpringCrudifyAsyncConnectorEnvelop<T>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, object.getDomain(), null, operation,
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, domain, null, operation,
 						object, null, null);
 				
 				try {
@@ -246,7 +228,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				pair.getLocker().notifyAll();
 			}
 		} else {
-			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), domain, message.getTransactionUuid());
+			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), this.domain, message.getTransactionUuid());
 		}
 		
 	}

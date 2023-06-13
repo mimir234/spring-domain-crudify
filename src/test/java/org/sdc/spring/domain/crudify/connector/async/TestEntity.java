@@ -27,11 +27,6 @@ public class TestEntity implements ISpringCrudifyEntity {
 	private String id;
 
 	@Override
-	public String getDomain() {
-		return TestEntity.domain;
-	}
-
-	@Override
 	public ISpringCrudifyEntityFactory<TestEntity> getFactory() {
 		return new ISpringCrudifyEntityFactory<TestEntity>() {
 

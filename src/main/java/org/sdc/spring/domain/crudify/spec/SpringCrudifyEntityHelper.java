@@ -10,7 +10,15 @@ public class SpringCrudifyEntityHelper {
 		constructor = (Constructor<ISpringCrudifyEntity>) clazz.getConstructor();
 		ISpringCrudifyEntity entity = (ISpringCrudifyEntity) constructor.newInstance();
 		return entity;
-
+	}
+	
+	public static String getDomain(Class<ISpringCrudifyEntity> entity) {
+		return entity.getAnnotation(SpringCrudifyEntityDomain.class).name();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static ISpringCrudifyEntityFactory<ISpringCrudifyEntity> getFactory(Class<ISpringCrudifyEntity> clazz) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		return (ISpringCrudifyEntityFactory<ISpringCrudifyEntity>) SpringCrudifyEntityHelper.getOneInstance(clazz).getFactory();
 	}
 
 }

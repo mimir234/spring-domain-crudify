@@ -4,6 +4,6 @@ import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
 public interface ISpringCrudifyEventPublisher {
 	
-	public void publishEntityEvent(EntityEvent event, ISpringCrudifyEntity entity);
+	public void publishEntityEvent(SpringCrudifyEntityEvent event, ISpringCrudifyEntity entity);
 		
 }

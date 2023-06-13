@@ -31,8 +31,5 @@ public interface ISpringCrudifyEntity {
 	void setUuid(String uuid); 
 	
 	@JsonIgnore
-	String getDomain();
-	
-	@JsonIgnore
 	ISpringCrudifyEntityFactory<? extends ISpringCrudifyEntity> getFactory();	
 }

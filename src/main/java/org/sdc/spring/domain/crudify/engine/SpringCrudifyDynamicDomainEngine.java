@@ -26,7 +26,6 @@ import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
-import org.sdc.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.sdc.spring.domain.crudify.ws.ISpringCrudifyRestService;
 import org.sdc.spring.domain.crudify.ws.SpringCrudifyEngineRestService;
 import org.springframework.beans.factory.annotation.Value;

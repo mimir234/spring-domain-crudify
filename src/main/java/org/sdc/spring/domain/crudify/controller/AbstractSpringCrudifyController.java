@@ -19,10 +19,12 @@ import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector.SpringCrudifyConnectorOperation;
 import org.sdc.spring.domain.crudify.connector.SpringCrudifyConnectorException;
 import org.sdc.spring.domain.crudify.events.ISpringCrudifyEventPublisher;
+import org.sdc.spring.domain.crudify.events.SpringCrudifyEntityEvent;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteralException;
@@ -70,24 +72,14 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 	@PostConstruct
 	protected void getDomain() {
 		Class<Entity> clazz = this.getEntityClazz();
-		Constructor<Entity> constructor;
 		try {
-
-			constructor = (Constructor<Entity>) clazz.getConstructor();
-			Entity entity = (Entity) constructor.newInstance();
-			if (entity.getDomain().isEmpty()) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-
-			this.factory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
-
+			this.factory = (ISpringCrudifyEntityFactory<Entity>) SpringCrudifyEntityHelper.getFactory((Class<ISpringCrudifyEntity>) clazz);
 		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.factory = null;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		this.domain = SpringCrudifyEntityHelper.getDomain((Class<ISpringCrudifyEntity>) clazz);
 	}
 
 	/**
@@ -161,7 +153,11 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 
 			this.crudRepository.get().save(tenantId, entity);
 		}
-
+		
+		if( this.eventPublisher.isPresent()) {
+			this.eventPublisher.get().publishEntityEvent(SpringCrudifyEntityEvent.CREATE, entity);
+		}
+		
 		return entity;
 	}
 
@@ -234,6 +230,10 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 
 			updated = this.crudRepository.get().update(tenantId, entity);
 		}
+		
+		if( this.eventPublisher.isPresent()) {
+			this.eventPublisher.get().publishEntityEvent(SpringCrudifyEntityEvent.UPDATE, entity);
+		}
 
 		return updated;
 	}
@@ -268,6 +268,10 @@ public abstract class AbstractSpringCrudifyController<Entity extends ISpringCrud
 			}
 		} else if (this.crudRepository.isPresent()) {
 			this.crudRepository.get().delete(tenantId, entity);
+		}
+		
+		if( this.eventPublisher.isPresent()) {
+			this.eventPublisher.get().publishEntityEvent(SpringCrudifyEntityEvent.DELETE, entity);
 		}
 
 	}

@@ -1,6 +1,6 @@
 package org.sdc.spring.domain.crudify.events;
 
-public enum EntityEvent {
+public enum SpringCrudifyEntityEvent {
 
 	CREATE, UPDATE, DELETE
 	

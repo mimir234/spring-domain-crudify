@@ -3,8 +3,6 @@
  *******************************************************************************/
 package org.sdc.spring.domain.crudify.ws;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +12,8 @@ import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
 import org.sdc.spring.domain.crudify.security.authorization.BasicSpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityHelper;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
@@ -23,11 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,33 +59,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	@Getter
 	protected String domain;
 
-	private ISpringCrudifyEntityFactory<Entity> factory;
-
 	private ArrayList<ISpringCrudifyAuthorization> authorizations;
 
 	@SuppressWarnings("unchecked")
 	@PostConstruct
 	protected void init() {
 		this.defineAuthorizations();
-		Class<Entity> clazz = this.getEntityClazz();
-		Constructor<Entity> constructor;
-		try {
-
-			constructor = (Constructor<Entity>) clazz.getConstructor();
-			Entity entity = (Entity) constructor.newInstance();
-			if (entity.getDomain().isEmpty()) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-
-			this.factory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
-
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.factory = null;
-		}
+		this.domain = SpringCrudifyEntityHelper.getDomain((Class<ISpringCrudifyEntity>) this.getEntityClazz());
 	}
 
 	protected abstract Class<Entity> getEntityClazz();
