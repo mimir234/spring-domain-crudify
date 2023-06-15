@@ -17,13 +17,12 @@ The main features offered by this artifact are :
     
 ### RoadMap
 
- * Terminate the OpenAPI description for endpoints
  * Add security to OpenAPI description
  * Implement state machine features
  * Implement SQL Dao
  * Implement Spring AOT
- * Inject DynamicEngine in 
- * Enable Connector usage in dynamic domain engine
+ * Improve the Rest Services returned object => find a way to parametrize the EntityResponse
+
 
 ### Architecture
 

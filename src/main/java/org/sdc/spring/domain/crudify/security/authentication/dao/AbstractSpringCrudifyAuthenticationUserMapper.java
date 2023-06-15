@@ -14,7 +14,7 @@ public abstract class AbstractSpringCrudifyAuthenticationUserMapper<UserEntity e
 		try {
 			userEntity = this.getEntity(login);
 		} catch (ISpringCrudifySecurityException e) {
-			new UsernameNotFoundException(e.getMessage());
+			throw new UsernameNotFoundException(e.getMessage());
 		}
 	
 		return this.mapUser(userEntity);
