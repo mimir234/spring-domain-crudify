@@ -24,12 +24,12 @@
 		<snapshotRepository>
 			<id>github</id>
 			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/mimir234/SpringDomainCrudify</url>
+			<url>https://maven.pkg.github.com/mimir234/spring-domain-crudify</url>
 		</snapshotRepository>
 		<repository>
 			<id>github</id>
 			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/mimir234/SpringDomainCrudify</url>
+			<url>https://maven.pkg.github.com/mimir234/spring-domain-crudify</url>
 		</repository>
 	</distributionManagement>
 
