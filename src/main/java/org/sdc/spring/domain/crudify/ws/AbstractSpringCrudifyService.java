@@ -3,18 +3,18 @@
  *******************************************************************************/
 package org.sdc.spring.domain.crudify.ws;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.security.authorization.BasicSpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
@@ -23,18 +23,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Setter;
 
 /**
  * 
@@ -42,8 +37,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @param <Entity>
  */
-@Slf4j
-public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudifyEntity> {
+public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends SpringCrudifyDomainable<Entity, Dto> implements ISpringCrudifyRestService<Entity, Dto> {
+
+	public AbstractSpringCrudifyService(ISpringCrudifyDomain<Entity, Dto> domain) {
+		super(domain);
+	}
 
 	protected static final String SUCCESSFULLY_DELETED = "Ressource has been successfully deleted";
 
@@ -57,45 +55,17 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	protected boolean AUTHORIZE_DELETE_ONE = false;
 	protected boolean AUTHORIZE_DELETE_ALL = false;
 	protected boolean AUTHORIZE_COUNT = false;
-
-	protected abstract void defineAuthorizations();
 	
 	protected abstract List<ISpringCrudifyAuthorization> createCustomAuthorizations();
-	
-	@Getter
-	protected String domain;
-
-	private ISpringCrudifyEntityFactory<Entity> factory;
 
 	private ArrayList<ISpringCrudifyAuthorization> authorizations;
 
-	@SuppressWarnings("unchecked")
 	@PostConstruct
 	protected void init() {
-		this.defineAuthorizations();
-		Class<Entity> clazz = this.getEntityClazz();
-		Constructor<Entity> constructor;
-		try {
-
-			constructor = (Constructor<Entity>) clazz.getConstructor();
-			Entity entity = (Entity) constructor.newInstance();
-			if (entity.getDomain().isEmpty()) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-
-			this.factory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
-
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.factory = null;
-		}
+		this.authorize(this.AUTHORIZE_CREATION, this.AUTHORIZE_COUNT, this.AUTHORIZE_COUNT, this.AUTHORIZE_UPDATE, this.AUTHORIZE_DELETE_ONE, this.AUTHORIZE_DELETE_ALL, this.AUTHORIZE_COUNT);
 	}
 
-	protected abstract Class<Entity> getEntityClazz();
-
+	@Override
 	public List<ISpringCrudifyAuthorization> createAuthorizations() {
 		if( this.authorizations == null ) {
 			this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
@@ -116,7 +86,8 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	}
 	
 	@Inject
-	protected ISpringCrudifyController<Entity> crudController;
+	@Setter
+	protected ISpringCrudifyController<Entity, Dto> controller;
 
 	/**
 	 * Creates an entity.
@@ -124,17 +95,22 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @param
 	 * @return
 	 */
-	@RequestMapping(value = "", method = RequestMethod.POST)
-	public ResponseEntity<?> createEntity(@RequestBody Entity entity, @RequestHeader String tenantId) {
+	@Override
+	public ResponseEntity<?> createEntity(String entity__, String tenantId) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_CREATION) {
 			try {
-				entity = this.crudController.createEntity(tenantId, entity);
+				
+				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.entityClass);
+				
+				entity = this.controller.createEntity(tenantId, entity);
 				response = new ResponseEntity<>(entity, HttpStatus.CREATED);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		} else {
 			response = new ResponseEntity<>(new ISpringCrudifyErrorObject(NOT_IMPLEMENTED), HttpStatus.NOT_IMPLEMENTED);
@@ -148,14 +124,9 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
-	@RequestMapping(value = "", method = RequestMethod.GET)
-	public ResponseEntity<?> getEntities(@RequestHeader String tenantId,
-			@RequestParam(value = "mode", defaultValue = "full") SpringCrudifyReadOutputMode mode,
-			@RequestParam(value = "pageSize", defaultValue = "0") Integer pageSize,
-			@RequestParam(value = "pageIndex", defaultValue = "0") Integer pageIndex,
-			@RequestParam(value = "filter", defaultValue = "") String filterString,
-			@RequestParam(value = "sort", defaultValue = "") String sortString) {
+	public ResponseEntity<?> getEntities(String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
@@ -176,19 +147,23 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 			}
 
 			try {
-				entities = this.crudController.getEntityList(tenantId, pageSize, pageIndex, filter, sort, mode);
+				entities = this.controller.getEntityList(tenantId, pageSize, pageIndex, filter, sort, mode);
 			} catch (SpringCrudifyEntityException e) {
 				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
 			if (pageSize > 0) {
 				long totalCount = 0;
 				try {
-					totalCount = this.crudController.getEntityTotalCount(tenantId, filter);
+					totalCount = this.controller.getEntityTotalCount(tenantId, filter);
 				} catch (SpringCrudifyEntityException e) {
 					return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 							this.getHttpErrorCodeFromEntityExceptionCode(e));
+				} catch (Exception e) {
+					return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 
 				SpringCrudifyWsPage page = new SpringCrudifyWsPage(totalCount, ((List<Object>) entities));
@@ -209,18 +184,20 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
-	public ResponseEntity<?> getEntity(@RequestHeader String tenantId, @PathVariable String uuid) {
+	@Override
+	public ResponseEntity<?> getEntity(String tenantId, String uuid) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_GET_ONE) {
 			Entity entity;
 			try {
-				entity = this.crudController.getEntity(tenantId, uuid);
+				entity = this.controller.getEntity(tenantId, uuid);
 				response = new ResponseEntity<>(entity, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		} else {
 			return new ResponseEntity<>(new ISpringCrudifyErrorObject(NOT_IMPLEMENTED), HttpStatus.NOT_IMPLEMENTED);
@@ -234,20 +211,24 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
-	public ResponseEntity<?> updateEntity(@PathVariable String uuid, @RequestBody Entity entity,
-			@RequestHeader String tenantId) {
+	@Override
+	public ResponseEntity<?> updateEntity(String uuid, String entity__, String tenantId) {
 
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_UPDATE) {
 			try {
+				
+				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.entityClass);
+				
 				entity.setUuid(uuid);
-				Entity updatedEntity = this.crudController.updateEntity(tenantId, entity);
+				Entity updatedEntity = this.controller.updateEntity(tenantId, entity);
 				response = new ResponseEntity<>(updatedEntity, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
 		} else {
@@ -262,18 +243,20 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
-	public ResponseEntity<?> deleteEntity(@PathVariable String uuid, @RequestHeader String tenantId) {
+	@Override
+	public ResponseEntity<?> deleteEntity(@PathVariable(name = "uuid") String uuid, @RequestHeader(name = "tenantId") String tenantId) {
 
 		if (this.AUTHORIZE_DELETE_ONE) {
 			ResponseEntity<?> response = null;
 
 			try {
-				this.crudController.deleteEntity(tenantId, uuid);
+				this.controller.deleteEntity(tenantId, uuid);
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(SUCCESSFULLY_DELETED), HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						HttpStatus.NOT_ACCEPTABLE);
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
 			return response;
@@ -288,18 +271,20 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "", method = RequestMethod.DELETE)
-	public ResponseEntity<?> deleteAll(@RequestHeader String tenantId) {
+	@Override
+	public ResponseEntity<?> deleteAll(String tenantId) {
 
 		if (this.AUTHORIZE_DELETE_ALL) {
 			ResponseEntity<?> response = null;
 
 			try {
-				this.crudController.deleteEntities(tenantId);
+				this.controller.deleteEntities(tenantId);
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(SUCCESSFULLY_DELETED), HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
 			return response;
@@ -314,18 +299,20 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * 
 	 * @return
 	 */
-	@RequestMapping(value = "/count", method = RequestMethod.GET)
-	public ResponseEntity<?> getCount(@RequestHeader String tenantId) {
+	@Override
+	public ResponseEntity<?> getCount(@RequestHeader(name = "tenantId") String tenantId) {
 
 		if (this.AUTHORIZE_COUNT) {
 			ResponseEntity<?> response = null;
 
 			try {
-				long count = this.crudController.getEntityTotalCount(tenantId, null);
+				long count = this.controller.getEntityTotalCount(tenantId, null);
 				response = new ResponseEntity<>(count, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
+			} catch (Exception e) {
+				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 
 			return response;

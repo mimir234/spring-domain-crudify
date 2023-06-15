@@ -6,6 +6,8 @@ package org.sdc.spring.domain.crudify.repository;
 import java.util.List;
 
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
@@ -16,7 +18,7 @@ import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
  *
  * @param <Entity>
  */
-public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity> {
+public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends ISpringCrudifyDomainable<Entity, Dto>{
 
 	boolean doesExists(String tenantId, Entity entity);
 
@@ -37,8 +39,6 @@ public interface ISpringCrudifyRepository<Entity extends ISpringCrudifyEntity> {
 
 	long getCount(String tenantId, SpringCrudifyLiteral filter);
 
-	Class<Entity> getEntityClass();
-
-	void setDao(ISpringCrudifyDAORepository<?> dao);
+	void setDao(ISpringCrudifyDAORepository<Entity, Dto> dao);
 
 }

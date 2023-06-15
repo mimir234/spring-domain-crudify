@@ -3,70 +3,35 @@
  *******************************************************************************/
 package org.sdc.spring.domain.crudify.repository;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
-import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOFactory;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EnableMongoRepositories
-public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> implements ISpringCrudifyRepository<Entity> {
+public class SpringCrudifyRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends SpringCrudifyDomainable<Entity, Dto> implements ISpringCrudifyRepository<Entity, Dto> {
 	
+	public SpringCrudifyRepository(ISpringCrudifyDomain<Entity, Dto> domain) {
+		super(domain);
+	}
+
 	@Inject
-	protected ISpringCrudifyDAORepository<Dto> daoRepository;
-
-	protected String domain;
-
-	private ISpringCrudifyEntityFactory<Entity> entityFactory;
-	private ISpringCrudifyDTOFactory<Entity, Dto> dtoFactory;
+	protected ISpringCrudifyDAORepository<Entity, Dto> daoRepository;
 	
-	@SuppressWarnings("unchecked")
-	@PostConstruct
-    protected void getDomain() {
-    	
-    	Class<Entity> entityClass = this.getEntityClass();
-    	Class<Dto> dtoClass = this.getDTOClass();
-    	
-    	Constructor<Entity> entityConstructor;
-    	Constructor<Dto> dtoConstructor;
-		try {
-			
-			entityConstructor = entityClass.getConstructor();
-			Entity entity = (Entity) entityConstructor.newInstance();
-			if( entity.getDomain().isEmpty() ) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-			
-			this.entityFactory = (ISpringCrudifyEntityFactory<Entity>) entity.getFactory();
-			
-			dtoConstructor = dtoClass.getConstructor();
-			Dto dto = (Dto) dtoConstructor.newInstance();
-			this.dtoFactory = (ISpringCrudifyDTOFactory<Entity, Dto>) dto.getFactory();
-			
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.entityFactory = null;
-		}
-    }
-
 	@Override
     public long getCount(String tenantId, SpringCrudifyLiteral filter) {
     	log.info("[Tenant {}] [Domain {}] Get Total Count, Filter {}", tenantId, this.domain, filter);
@@ -97,14 +62,13 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
 		
 		log.info("[Tenant {}] [Domain {}] Checking if entity with uuid "+object.getUuid()+" exists.", tenantId, this.domain);
 		
-		if( this.daoRepository.findOneByUuidAndTenantId(object.getId(), object.getTenantId()) != null ){
+		if( this.daoRepository.findOneByUuidAndTenantId(object.getUuid(), object.getTenantId()) != null ){
 			log.info("[Tenant "+tenantId+"] Entity with uuid "+object.getUuid()+" exists.");
 			return true;
 		} 
 		log.info("[Tenant {}] [Domain {}] Entity with uuid "+object.getUuid()+" does not exists.", tenantId, this.domain);
 		return false;
 	}
-
 
 	@Override
 	public List<Entity> getEntities(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
@@ -158,7 +122,7 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
 		}
 
 	}
-	
+
 	@Override
 	public Entity getOneByUuid(String tenantId, String uuid) {
 		log.info("[Tenant {}] [Domain {}] Looking for object with uuid "+uuid, tenantId, this.domain);
@@ -195,7 +159,10 @@ public abstract class AbstractSpringCrudifyRepository<Entity extends ISpringCrud
 		
 		this.daoRepository.delete(object);
 	}
-	
-	protected abstract Class<Dto> getDTOClass();
+
+	@Override
+	public void setDao(ISpringCrudifyDAORepository<Entity, Dto> dao) {
+		this.daoRepository = dao;
+	}
 
 }

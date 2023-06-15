@@ -1,7 +1,5 @@
 package org.sdc.spring.domain.crudify.connector.async;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,19 +13,24 @@ import javax.inject.Inject;
 
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.connector.SpringCrudifyConnectorException;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntityFactory;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyDomainable;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudifyEntity, S extends List<T>> implements ISpringCrudifyConnector<T, S> {
+public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudifyEntity, S extends List<T>, U extends ISpringCrudifyDTOObject<T>> extends SpringCrudifyDomainable<T, U> implements ISpringCrudifyConnector<T, S, U> {
+
+	public AbstractSpringCrudifyAsyncConnector(ISpringCrudifyDomain<T, U> domain) {
+		super(domain);
+	}
 
 	@Inject
 	protected ExecutorService executor;
@@ -44,35 +47,6 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 
 	private Map<String, SpringCrudifyAsyncConnectorPair> receivedMessages = new HashMap<String, SpringCrudifyAsyncConnectorPair>();
 
-	protected Class<T> clazz;
-
-	private String domain;
-
-	private ISpringCrudifyEntityFactory<T> factory;
-
-	@SuppressWarnings("unchecked")
-	@PostConstruct
-	private void getDomain() {
-		this.setEntityClazz();
-		Constructor<T> constructor;
-		try {
-
-			constructor = this.clazz.getConstructor();
-			T entity = (T) constructor.newInstance();
-			if (entity.getDomain().isEmpty()) {
-				this.domain = "unknown";
-			} else {
-				this.domain = entity.getDomain();
-			}
-
-			this.factory = (ISpringCrudifyEntityFactory<T>) entity.getFactory();
-
-		} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e) {
-			this.domain = "unknown";
-			this.factory = null;
-		}
-	}
 	
 	/*
 	 * This method drives me feeling sick, it has to be refactored ASAP !!!! The filosophy is to merge it with the requestEntity method.  
@@ -93,7 +67,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				Object locker = new Object();
 
 				SpringCrudifyAsyncConnectorEnvelop<S> message = new SpringCrudifyAsyncConnectorEnvelop<S>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, null, null, operation,
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, domain, null, operation,
 						list, null, null);
 				
 				try {
@@ -173,7 +147,7 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				Object locker = new Object();
 
 				SpringCrudifyAsyncConnectorEnvelop<T> message = new SpringCrudifyAsyncConnectorEnvelop<T>(
-						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, object.getDomain(), null, operation,
+						SpringCrudifyAsyncMessageType.REQUEST, uuid, transactionUuid, tenantId, domain, null, operation,
 						object, null, null);
 				
 				try {
@@ -246,13 +220,13 @@ public abstract class AbstractSpringCrudifyAsyncConnector<T extends ISpringCrudi
 				pair.getLocker().notifyAll();
 			}
 		} else {
-			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), domain, message.getTransactionUuid());
+			log.warn("[Tenant {}] [Domain {}] Request with transaction id {} not found, dropping message", message.getTenantId(), this.domain, message.getTransactionUuid());
 		}
 		
 	}
 
 	// -----------------------------------------------------------//
-	// Abstract methods below to be implemented by sub classes //
+	// Abstract methods below to be implemented by sub classes    //
 	// -----------------------------------------------------------//
 
 	abstract public void publishRequest(SpringCrudifyAsyncConnectorEnvelop<?> message) throws SpringCrudifyConnectorException;

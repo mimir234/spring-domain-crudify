@@ -15,10 +15,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.sdc.spring.domain.crudify.connector.SpringCrudifyConnectorException;
-import org.sdc.spring.domain.crudify.connector.async.AbstractSpringCrudifyAsyncConnector;
-import org.sdc.spring.domain.crudify.connector.async.SpringCrudifyAsyncConnectorEnvelop;
-import org.sdc.spring.domain.crudify.connector.async.SpringCrudifyAsyncMessageType;
-import org.sdc.spring.domain.crudify.connector.async.SpringCrudifyAsyncResponseStatus;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,9 +23,31 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
-public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudifyAsyncConnector<TestEntity, List<TestEntity>>{
+public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudifyAsyncConnector<TestEntity, List<TestEntity>, Dto>{
 
-	static TestAbstractSpringCrudifyAsyncConnector connector = new TestAbstractSpringCrudifyAsyncConnector();
+	private static final ISpringCrudifyDomain<TestEntity, Dto> domainObject = new ISpringCrudifyDomain<TestEntity, Dto>() {
+
+		@Override
+		public Class<TestEntity> getEntityClass() {
+			return TestEntity.class;
+		}
+
+		@Override
+		public Class<Dto> getDtoClass() {
+			return Dto.class;
+		}
+
+		@Override
+		public String getDomain() {
+			return "tests";
+		}
+	};
+
+	public TestAbstractSpringCrudifyAsyncConnector(ISpringCrudifyDomain<TestEntity, Dto> domain) {
+		super(domain);
+	}
+
+	static TestAbstractSpringCrudifyAsyncConnector connector = new TestAbstractSpringCrudifyAsyncConnector(domainObject);
 
 	static long responseDelay = 150;
 
@@ -203,11 +222,5 @@ public class TestAbstractSpringCrudifyAsyncConnector extends AbstractSpringCrudi
 		};
 		t.start();
 	}
-
-	@Override
-	public void setEntityClazz() {
-		this.clazz = TestEntity.class;
-	}
-
 
 }
