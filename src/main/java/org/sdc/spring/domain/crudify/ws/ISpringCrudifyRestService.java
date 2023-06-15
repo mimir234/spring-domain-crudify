@@ -3,7 +3,9 @@ package org.sdc.spring.domain.crudify.ws;
 import java.util.List;
 
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> {
-
-	String getDomain();
+public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends ISpringCrudifyDomainable<Entity, Dto> {
 
 	List<ISpringCrudifyAuthorization> createAuthorizations();
 
@@ -51,8 +51,6 @@ public interface ISpringCrudifyRestService<Entity extends ISpringCrudifyEntity> 
 			boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all,
 			boolean authorize_count);
 
-	void setEntityClass(Class<?> entityClass);
-
-	void setController(ISpringCrudifyController<?> controller);
+	void setController(ISpringCrudifyController<Entity, Dto> controller);
 
 }

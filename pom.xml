@@ -136,6 +136,16 @@
 			<artifactId>compiler</artifactId>
 			<version>0.9.10</version>
 		</dependency>
+		
+		<!-- BugFix : having 500 internal error code when requesting swagger-ui -->
+		<!-- The API throws an exception : java.lang.ClassNotFoundException: jakarta.validation.constraints.Min -->
+		<!-- When building a domain by extending objects and creating beans -->
+		<!-- The bug is not present for dynamic domains -->
+		<dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>8.0.0.Final</version>
+        </dependency>
 
 		<dependency>
 			<groupId>org.reflections</groupId>

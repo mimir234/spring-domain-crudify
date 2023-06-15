@@ -6,9 +6,11 @@ package org.sdc.spring.domain.crudify.connector;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
-public interface ISpringCrudifyConnector <T extends ISpringCrudifyEntity, S extends List<T>> {
+public interface ISpringCrudifyConnector <T extends ISpringCrudifyEntity, S extends List<T>, U extends ISpringCrudifyDTOObject<T>> extends ISpringCrudifyDomainable<T, U>{
 
 	public enum SpringCrudifyConnectorOperation {
 		READ, CREATE, UPDATE, DELETE
@@ -35,11 +37,5 @@ public interface ISpringCrudifyConnector <T extends ISpringCrudifyEntity, S exte
 	 * @throws SpringCrudifyConnectorException
 	 */
 	public Future<S> requestList(String tenantId, S list, SpringCrudifyConnectorOperation operation) throws SpringCrudifyConnectorException;
-	
-	/**
-	 * 
-	 */
-	public void setEntityClazz();
-
 
 }

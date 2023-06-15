@@ -7,52 +7,22 @@ import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.events.ISpringCrudifyEventPublisher;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 
-@SuppressWarnings("unchecked")
-public class SpringCrudifyEngineController extends AbstractSpringCrudifyController<ISpringCrudifyEntity> {
+public class SpringCrudifyEngineController extends SpringCrudifyController<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>> {
 
-	private Class<?> entityClass;
-
-	public SpringCrudifyEngineController(Class<?> entityClass, Optional<?> repoObj, Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> crudConnector, Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business, Optional<ISpringCrudifyEventPublisher> event) {
-		this.entityClass = entityClass;
-		this.crudRepository = (Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>>) repoObj;
-		this.crudConnector = crudConnector;
+	public SpringCrudifyEngineController(
+			ISpringCrudifyDomain<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>> domain,
+			Optional<ISpringCrudifyRepository<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>>> repository,
+			Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>, ISpringCrudifyDTOObject<ISpringCrudifyEntity>>> connector,
+			Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business,
+			Optional<ISpringCrudifyEventPublisher> event ) {
+		super(domain);
+		this.repository = repository;
+		this.connector = connector;
 		this.business = business;
-		this.eventPublisher = event;
-		
-		this.getDomain();
-	}
-	
-	@Override
-	public Class<ISpringCrudifyEntity> getEntityClazz() {
-		return (Class<ISpringCrudifyEntity>) this.entityClass;
-	}
-
-
-	@Override
-	public void setEntityClass(Class<?> entityClass) {
-		this.entityClass = entityClass;
-	}
-
-	@Override
-	public void setRepository(Optional<?> repository) {
-		this.crudRepository = (Optional<ISpringCrudifyRepository<ISpringCrudifyEntity>>) repository;
-	}
-
-	@Override
-	public void setConnector(Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj) {
-		this.crudConnector = connectorObj;
-	}
-
-	@Override
-	public void setbusiness(Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> business) {
-		this.business = business;
-		
-	}
-
-	@Override
-	public void setEventPublisher(Optional<ISpringCrudifyEventPublisher> event) {
 		this.eventPublisher = event;
 	}
 

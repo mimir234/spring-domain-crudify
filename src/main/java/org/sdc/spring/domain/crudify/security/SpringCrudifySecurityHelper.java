@@ -6,15 +6,16 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.security.authentication.ISpringCrudifyAuthenticationManager;
 import org.sdc.spring.domain.crudify.security.authentication.ISpringCrudifySecurityException;
 import org.sdc.spring.domain.crudify.security.authentication.ws.RolesRestService;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
 import org.sdc.spring.domain.crudify.security.tenants.SpringCrudifyTenantVerifier;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.ws.AbstractSpringCrudifyService;
 import org.sdc.spring.domain.crudify.ws.ISpringCrudifyRestService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -37,19 +38,19 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	@Inject
 	private Optional<ISpringCrudifyAuthorizationManager> authorizationManager;
 	
-	@Autowired
-	private List<AbstractSpringCrudifyService<?>> services;
+	@Inject
+	private List<AbstractSpringCrudifyService<? extends ISpringCrudifyEntity,? extends ISpringCrudifyDTOObject<? extends ISpringCrudifyEntity>>> services;
 	
-	@Autowired
-	private List<ISpringCrudifyRestService<?>> restServices;
+	@Inject
+	private List<ISpringCrudifyRestService<? extends ISpringCrudifyEntity,? extends ISpringCrudifyDTOObject<? extends ISpringCrudifyEntity>>> restServices;
 	
-	@Autowired
+	@Inject
 	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
 
 	@Getter
 	private ArrayList<ISpringCrudifyAuthorization> authorizations;
 	
-	@Autowired
+	@Inject
 	private Optional<RolesRestService> rolesRestService;
 	
 	@Override

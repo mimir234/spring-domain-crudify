@@ -10,13 +10,15 @@ import org.sdc.spring.domain.crudify.business.ISpringCrudifyBusiness;
 import org.sdc.spring.domain.crudify.connector.ISpringCrudifyConnector;
 import org.sdc.spring.domain.crudify.events.ISpringCrudifyEventPublisher;
 import org.sdc.spring.domain.crudify.repository.ISpringCrudifyRepository;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
 import org.sdc.spring.domain.crudify.spec.SpringCrudifyReadOutputMode;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 
-public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity> {
+public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends ISpringCrudifyDomainable<Entity, Dto>{
 
 	public Entity createEntity(String tenantId, Entity object) throws SpringCrudifyEntityException;
 
@@ -29,19 +31,15 @@ public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity> {
 	public Entity getEntity(String tenantId, String uuid) throws SpringCrudifyEntityException;
 
 	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
-	
-	public Class<Entity> getEntityClazz();
 
 	public List<?> getEntityList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort,
 			SpringCrudifyReadOutputMode mode) throws SpringCrudifyEntityException;
 
-	public void setEntityClass(Class<?> entityClass);
+	public void setRepository(Optional<ISpringCrudifyRepository<Entity, Dto>> repository);
 
-	public void setRepository(Optional<?> repoObj);
+	public void setConnector(Optional<ISpringCrudifyConnector<Entity, List<Entity>, Dto>> connector);
 
-	public void setConnector(Optional<ISpringCrudifyConnector<ISpringCrudifyEntity, List<ISpringCrudifyEntity>>> connectorObj);
-
-	public void setbusiness(Optional<ISpringCrudifyBusiness<ISpringCrudifyEntity>> businessObj);
+	public void setBusiness(Optional<ISpringCrudifyBusiness<Entity>> businessObj);
 
 	public void setEventPublisher(Optional<ISpringCrudifyEventPublisher> eventObj);
 

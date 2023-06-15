@@ -5,20 +5,28 @@ import java.lang.reflect.InvocationTargetException;
 
 public class SpringCrudifyEntityHelper {
 	
-	public static ISpringCrudifyEntity getOneInstance(Class<ISpringCrudifyEntity> clazz) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Constructor<ISpringCrudifyEntity> constructor;
-		constructor = (Constructor<ISpringCrudifyEntity>) clazz.getConstructor();
-		ISpringCrudifyEntity entity = (ISpringCrudifyEntity) constructor.newInstance();
+	public static <T extends ISpringCrudifyEntity> T getOneInstance(Class<T> clazz) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Constructor<T> constructor;
+		constructor = (Constructor<T>) clazz.getConstructor();
+		T entity = (T) constructor.newInstance();
 		return entity;
 	}
 	
-	public static String getDomain(Class<ISpringCrudifyEntity> entity) {
-		return entity.getAnnotation(SpringCrudifyEntityDomain.class).name();
+	public static <T extends ISpringCrudifyEntity> String getDomain(Class<T> entity) {
+		
+		String domain;
+		try {
+			domain = entity.getAnnotation(SpringCrudifyEntity.class).domain();
+		} catch(Exception e) {
+			domain = entity.getSimpleName();
+		}
+		
+		return domain;
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static ISpringCrudifyEntityFactory<ISpringCrudifyEntity> getFactory(Class<ISpringCrudifyEntity> clazz) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		return (ISpringCrudifyEntityFactory<ISpringCrudifyEntity>) SpringCrudifyEntityHelper.getOneInstance(clazz).getFactory();
+	public static <T extends ISpringCrudifyEntity> ISpringCrudifyEntityFactory<T> getFactory(Class<T> clazz) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		return (ISpringCrudifyEntityFactory<T>) SpringCrudifyEntityHelper.getOneInstance(clazz).getFactory();
 	}
 
 }

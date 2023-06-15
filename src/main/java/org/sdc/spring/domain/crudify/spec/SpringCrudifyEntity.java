@@ -45,4 +45,6 @@ public @interface SpringCrudifyEntity {
 	
 	String eventPublisher() default "";
 
+	String domain();
+
 }

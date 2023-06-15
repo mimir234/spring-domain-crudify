@@ -6,27 +6,25 @@ package org.sdc.spring.domain.crudify.repository.dao;
 import java.util.List;
 
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.data.domain.Pageable;
 
-public interface ISpringCrudifyDAORepository<DTO extends ISpringCrudifyDTOObject<ISpringCrudifyEntity>> {
+public interface ISpringCrudifyDAORepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends ISpringCrudifyDomainable<Entity, Dto>{
 
-	List<DTO> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort);
+	List<Dto> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort);
 
-	DTO findOneByUuidAndTenantId(String uuid, String tenantId);
+	Dto findOneByUuidAndTenantId(String uuid, String tenantId);
 
-	DTO findOneByIdAndTenantId(String id, String tenantId);
+	Dto findOneByIdAndTenantId(String id, String tenantId);
 
-	DTO save(DTO object);
+	Dto save(Dto object);
 
-	void delete(DTO object);
+	void delete(Dto object);
 	
 	long countByTenantId(String tenantId, SpringCrudifyLiteral filter);
 
 	void setMagicTenantId(String magicTenantId);
-
-	void setDtoClass(Class<?> dtoClass);
-	
 }

@@ -7,7 +7,9 @@ import javax.inject.Inject;
 
 import org.sdc.spring.domain.crudify.repository.dao.ISpringCrudifyDAORepository;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
+import org.sdc.spring.domain.crudify.spec.SpringCrudifyDomainable;
 import org.sdc.spring.domain.crudify.spec.filter.SpringCrudifyLiteral;
 import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +20,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrudifyDTOObject<ISpringCrudifyEntity>> implements ISpringCrudifyDAORepository<T> {
+public class SpringCrudifyMongoRepository<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends SpringCrudifyDomainable<Entity, Dto> implements ISpringCrudifyDAORepository<Entity, Dto> {
+
+	public SpringCrudifyMongoRepository(ISpringCrudifyDomain<Entity, Dto> domain) {
+		super(domain);
+	}
 
 	@Inject
 	protected MongoTemplate mongo;
@@ -27,13 +33,22 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 	protected String magicTenantId;
 
 	@Override
-	public T save(T object) {
+	public void setMagicTenantId(String magicTenantId) {
+		this.magicTenantId = magicTenantId;
+	}
+	
+	public void setMongoTemplate(MongoTemplate mongo) {
+		this.mongo = mongo;
+	}
+	
+	@Override
+	public Dto save(Dto object) {
 		return this.mongo.save(object);
 	}
-
+	
 	@Override
-	public List<T> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
-		List<T> results = new ArrayList<>();
+	public List<Dto> findByTenantId(String tenantId, Pageable pageable, SpringCrudifyLiteral filter, SpringCrudifySort sort) {
+		List<Dto> results = new ArrayList<>();
 
 		Query query = new Query();
 		
@@ -42,7 +57,7 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 		}
 
 		if (filter != null) {
-			Criteria criteria = AbstractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
+			Criteria criteria = SpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
 			query.addCriteria(criteria);
 		}
 
@@ -59,7 +74,7 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 			query.with(Sort.by(direction, sort.getFieldName()));
 		}
 		
-		results = this.mongo.find(query, this.getDTOClass());
+		results = this.mongo.find(query, this.dtoClass);
 
 		return results;
 	}
@@ -142,7 +157,7 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 	}
 
 	@Override
-	public T findOneByUuidAndTenantId(String uuid, String tenantId) {
+	public Dto findOneByUuidAndTenantId(String uuid, String tenantId) {
 	
 		Query query = new Query();
 		
@@ -152,11 +167,11 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 			query.addCriteria(Criteria.where("uuid").is(uuid));
 		}
 		
-		return this.mongo.findOne(query, this.getDTOClass());
+		return this.mongo.findOne(query, this.dtoClass);
 	}
 
 	@Override
-	public T findOneByIdAndTenantId(String id, String tenantId) {
+	public Dto findOneByIdAndTenantId(String id, String tenantId) {
 		
 		Query query = new Query();
 		
@@ -166,13 +181,13 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 			query.addCriteria(Criteria.where("id").is(id));
 		}
 		
-		return this.mongo.findOne(query, this.getDTOClass());
+		return this.mongo.findOne(query, this.dtoClass);
 	}
 
 	@Override
-	public void delete(T object) {
+	public void delete(Dto object) {
 
-		this.mongo.findAndRemove(null, this.getDTOClass());
+		this.mongo.remove(object);
 	}
 
 	@Override
@@ -185,12 +200,11 @@ public abstract class AbstractSpringCrudifyMongoRepository<T extends ISpringCrud
 		}
 
 		if (filter != null) {
-			Criteria criteria = AbstractSpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
+			Criteria criteria = SpringCrudifyMongoRepository.getCriteriaFromFilter(filter);
 			query.addCriteria(criteria);
 		}
 		
-		return this.mongo.count(query, this.getDTOClass());
+		return this.mongo.count(query, this.dtoClass);
 	}
 
-	protected abstract Class<T> getDTOClass();
 }

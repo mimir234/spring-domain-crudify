@@ -3,61 +3,23 @@ package org.sdc.spring.domain.crudify.ws;
 import java.util.List;
 
 import org.sdc.spring.domain.crudify.controller.ISpringCrudifyController;
+import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
+import org.sdc.spring.domain.crudify.spec.ISpringCrudifyDomain;
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
-import org.sdc.spring.domain.crudify.spec.SpringCrudifyEntityException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>> {
 
-import lombok.Setter;
-
-@SuppressWarnings("unchecked")
-public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService<ISpringCrudifyEntity> {
-
-	public void setCrudController(ISpringCrudifyController<ISpringCrudifyEntity> crudController) {
-		this.crudController = crudController;
-	}
-	
-	@Setter
-	protected Class<?> entityClass;
-	private boolean authorize_creation;
-	private boolean authorize_read_all;
-	private boolean authorize_read_one;
-	private boolean authorize_update_one;
-	private boolean authorize_delete_one;
-	private boolean authorize_count;
-	private boolean authorize_delete_all;
-
-	public SpringCrudifyEngineRestService(Class<?> entityClass, ISpringCrudifyController<ISpringCrudifyEntity> crudController, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) {
-		this.entityClass = entityClass;
-		this.crudController = crudController;
-		this.authorize_creation = authorize_creation;
-		this.authorize_read_all = authorize_read_all;
-		this.authorize_read_one = authorize_read_one;
-		this.authorize_update_one = authorize_update_one;
-		this.authorize_delete_one = authorize_delete_one;
-		this.authorize_delete_all = authorize_delete_all;
-		this.authorize_count = authorize_count;
-		
-		this.getDomain();
-		this.init();
-	}
-	
-	@Override
-	protected void defineAuthorizations() {
-		this.AUTHORIZE_CREATION = this.authorize_creation;
-		this.AUTHORIZE_DELETE_ALL = this.authorize_delete_all;
-		this.AUTHORIZE_DELETE_ONE = this.authorize_delete_one;
-		this.AUTHORIZE_GET_ALL = this.authorize_read_all;
-		this.AUTHORIZE_GET_ONE = this.authorize_read_one;
-		this.AUTHORIZE_UPDATE = this.authorize_update_one;
-		this.AUTHORIZE_COUNT = this.authorize_count;
+	public SpringCrudifyEngineRestService(ISpringCrudifyDomain<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>> domain, ISpringCrudifyController<ISpringCrudifyEntity, ISpringCrudifyDTOObject<ISpringCrudifyEntity>> controller, boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one, boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all, boolean authorize_count) {
+		super(domain);
+		this.controller = controller;
+		this.AUTHORIZE_CREATION = authorize_creation;
+		this.AUTHORIZE_GET_ALL = authorize_read_all;
+		this.AUTHORIZE_GET_ONE = authorize_read_one;
+		this.AUTHORIZE_UPDATE = authorize_update_one;
+		this.AUTHORIZE_DELETE_ONE = authorize_delete_one;
+		this.AUTHORIZE_DELETE_ALL = authorize_delete_all;
+		this.AUTHORIZE_COUNT = authorize_count;
 	}
 
 	@Override
@@ -66,27 +28,17 @@ public class SpringCrudifyEngineRestService extends AbstractSpringCrudifyService
 		return null;
 	}
 
-	@Override
-	protected Class<ISpringCrudifyEntity> getEntityClazz() {
-		return (Class<ISpringCrudifyEntity>) this.entityClass;
-	}
 
 	@Override
 	public void authorize(boolean authorize_creation, boolean authorize_read_all, boolean authorize_read_one,
 			boolean authorize_update_one, boolean authorize_delete_one, boolean authorize_delete_all,
 			boolean authorize_count) {
-		this.authorize_creation = authorize_creation;
-		this.authorize_read_all = authorize_read_all;
-		this.authorize_read_one = authorize_read_one;
-		this.authorize_update_one = authorize_update_one;
-		this.authorize_delete_one = authorize_delete_one;
-		this.authorize_delete_all = authorize_delete_all;
-		this.authorize_count = authorize_count;
+		this.AUTHORIZE_CREATION = authorize_creation;
+		this.AUTHORIZE_GET_ALL = authorize_read_all;
+		this.AUTHORIZE_COUNT = authorize_read_one;
+		this.AUTHORIZE_UPDATE = authorize_update_one;
+		this.AUTHORIZE_DELETE_ONE = authorize_delete_one;
+		this.AUTHORIZE_DELETE_ALL = authorize_delete_all;
+		this.AUTHORIZE_COUNT = authorize_count;
 	}
-
-	@Override
-	public void setController(ISpringCrudifyController<?> controller) {
-		this.crudController = (ISpringCrudifyController<ISpringCrudifyEntity>) controller;
-	}
-
 }

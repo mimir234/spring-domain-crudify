@@ -3,6 +3,8 @@
  *******************************************************************************/
 package org.sdc.spring.domain.crudify.repository.dto;
 
+import javax.swing.text.html.parser.Entity;
+
 import org.sdc.spring.domain.crudify.spec.ISpringCrudifyEntity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -16,6 +18,7 @@ import lombok.Data;
  *
  * @param <Entity>
  */
+@SuppressWarnings("hiding")
 @Data
 public abstract class AbstractSpringCrudifyDTOObject<Entity extends ISpringCrudifyEntity> implements ISpringCrudifyDTOObject<Entity> {
 	
@@ -28,6 +31,12 @@ public abstract class AbstractSpringCrudifyDTOObject<Entity extends ISpringCrudi
 	
 	@Field
 	protected String tenantId;
+	
+	protected Entity convert(Entity entity) {
+		entity.setId(this.getId());
+		entity.setUuid(this.uuid);
+		return entity;
+	}
 
 	protected AbstractSpringCrudifyDTOObject() {
 	}
