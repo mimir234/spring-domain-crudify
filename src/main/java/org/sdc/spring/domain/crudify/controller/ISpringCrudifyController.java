@@ -20,20 +20,20 @@ import org.sdc.spring.domain.crudify.spec.sort.SpringCrudifySort;
 
 public interface ISpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto extends ISpringCrudifyDTOObject<Entity>> extends ISpringCrudifyDomainable<Entity, Dto>{
 
-	public Entity createEntity(String tenantId, Entity object) throws SpringCrudifyEntityException;
+	public Entity createEntity(String tenantId, Entity object, String userId) throws SpringCrudifyEntityException;
 
-	public Entity updateEntity(String tenantId, Entity entity) throws SpringCrudifyEntityException;
+	public Entity updateEntity(String tenantId, Entity entity, String userId) throws SpringCrudifyEntityException;
 	
-	public void deleteEntity(String tenantId, String id) throws SpringCrudifyEntityException;
+	public void deleteEntity(String tenantId, String id, String userId) throws SpringCrudifyEntityException;
 
-	public void deleteEntities(String tenantId) throws SpringCrudifyEntityException;
+	public void deleteEntities(String tenantId, String userId) throws SpringCrudifyEntityException;
 
-	public Entity getEntity(String tenantId, String uuid) throws SpringCrudifyEntityException;
+	public Entity getEntity(String tenantId, String uuid, String userId) throws SpringCrudifyEntityException;
 
-	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException;
+	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter, String userId) throws SpringCrudifyEntityException;
 
 	public List<?> getEntityList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort,
-			SpringCrudifyReadOutputMode mode) throws SpringCrudifyEntityException;
+			SpringCrudifyReadOutputMode mode, String userId) throws SpringCrudifyEntityException;
 
 	public void setRepository(Optional<ISpringCrudifyRepository<Entity, Dto>> repository);
 

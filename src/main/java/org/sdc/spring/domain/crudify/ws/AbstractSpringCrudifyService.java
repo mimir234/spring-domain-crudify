@@ -96,7 +96,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> createEntity(String entity__, String tenantId) {
+	public ResponseEntity<?> createEntity(String entity__, String tenantId, String userId) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_CREATION) {
@@ -104,7 +104,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 				
 				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.entityClass);
 				
-				entity = this.controller.createEntity(tenantId, entity);
+				entity = this.controller.createEntity(tenantId, entity, userId);
 				response = new ResponseEntity<>(entity, HttpStatus.CREATED);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
@@ -126,7 +126,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public ResponseEntity<?> getEntities(String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString) {
+	public ResponseEntity<?> getEntities(String tenantId, SpringCrudifyReadOutputMode mode, Integer pageSize, Integer pageIndex, String filterString, String sortString, String userId) {
 
 		if (this.AUTHORIZE_GET_ALL) {
 
@@ -147,7 +147,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 			}
 
 			try {
-				entities = this.controller.getEntityList(tenantId, pageSize, pageIndex, filter, sort, mode);
+				entities = this.controller.getEntityList(tenantId, pageSize, pageIndex, filter, sort, mode, userId);
 			} catch (SpringCrudifyEntityException e) {
 				return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 						this.getHttpErrorCodeFromEntityExceptionCode(e));
@@ -158,7 +158,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 			if (pageSize > 0) {
 				long totalCount = 0;
 				try {
-					totalCount = this.controller.getEntityTotalCount(tenantId, filter);
+					totalCount = this.controller.getEntityTotalCount(tenantId, filter, userId);
 				} catch (SpringCrudifyEntityException e) {
 					return new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
 							this.getHttpErrorCodeFromEntityExceptionCode(e));
@@ -185,13 +185,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> getEntity(String tenantId, String uuid) {
+	public ResponseEntity<?> getEntity(String tenantId, String uuid, String userId) {
 		ResponseEntity<?> response = null;
 
 		if (this.AUTHORIZE_GET_ONE) {
 			Entity entity;
 			try {
-				entity = this.controller.getEntity(tenantId, uuid);
+				entity = this.controller.getEntity(tenantId, uuid, userId);
 				response = new ResponseEntity<>(entity, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
@@ -212,7 +212,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> updateEntity(String uuid, String entity__, String tenantId) {
+	public ResponseEntity<?> updateEntity(String uuid, String entity__, String tenantId, String userId) {
 
 		ResponseEntity<?> response = null;
 
@@ -222,7 +222,7 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 				Entity entity = (Entity) new ObjectMapper().readValue(entity__.getBytes(), this.entityClass);
 				
 				entity.setUuid(uuid);
-				Entity updatedEntity = this.controller.updateEntity(tenantId, entity);
+				Entity updatedEntity = this.controller.updateEntity(tenantId, entity, userId);
 				response = new ResponseEntity<>(updatedEntity, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
@@ -244,13 +244,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> deleteEntity(@PathVariable(name = "uuid") String uuid, @RequestHeader(name = "tenantId") String tenantId) {
+	public ResponseEntity<?> deleteEntity(@PathVariable(name = "uuid") String uuid, @RequestHeader(name = "tenantId") String tenantId, String userId) {
 
 		if (this.AUTHORIZE_DELETE_ONE) {
 			ResponseEntity<?> response = null;
 
 			try {
-				this.controller.deleteEntity(tenantId, uuid);
+				this.controller.deleteEntity(tenantId, uuid, userId);
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(SUCCESSFULLY_DELETED), HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
@@ -272,13 +272,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> deleteAll(String tenantId) {
+	public ResponseEntity<?> deleteAll(String tenantId, String userId) {
 
 		if (this.AUTHORIZE_DELETE_ALL) {
 			ResponseEntity<?> response = null;
 
 			try {
-				this.controller.deleteEntities(tenantId);
+				this.controller.deleteEntities(tenantId, userId);
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(SUCCESSFULLY_DELETED), HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
@@ -300,13 +300,13 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<?> getCount(@RequestHeader(name = "tenantId") String tenantId) {
+	public ResponseEntity<?> getCount(@RequestHeader(name = "tenantId") String tenantId, String userId) {
 
 		if (this.AUTHORIZE_COUNT) {
 			ResponseEntity<?> response = null;
 
 			try {
-				long count = this.controller.getEntityTotalCount(tenantId, null);
+				long count = this.controller.getEntityTotalCount(tenantId, null, userId);
 				response = new ResponseEntity<>(count, HttpStatus.OK);
 			} catch (SpringCrudifyEntityException e) {
 				response = new ResponseEntity<>(new ISpringCrudifyErrorObject(e.getMessage()),
