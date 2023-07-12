@@ -75,7 +75,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	 * 
 	 */
 	@Override
-	public Entity getEntity(String tenantId, String uuid) throws SpringCrudifyEntityException {
+	public Entity getEntity(String tenantId, String uuid, String userId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Getting entity with Uuid " + uuid, tenantId, this.domain);
 		Entity entity = null;
 
@@ -108,7 +108,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public Entity createEntity(String tenantId, Entity entity) throws SpringCrudifyEntityException {
+	public Entity createEntity(String tenantId, Entity entity, String userId) throws SpringCrudifyEntityException {
 
 		log.info("[Tenant {}] [Domain {}] Creating entity with uuid {}", tenantId, this.domain, entity.getUuid());
 
@@ -117,7 +117,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 		}
 
 		if(this.business.isPresent()) {
-			this.business.get().beforeCreate(tenantId, entity);
+			this.business.get().beforeCreate(tenantId, userId, entity);
 		}
 
 		if (this.connector.isPresent()) {
@@ -151,7 +151,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public List<?> getEntityList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort, SpringCrudifyReadOutputMode mode)
+	public List<?> getEntityList(String tenantId, int pageSize, int pageIndex, SpringCrudifyLiteral filter, SpringCrudifySort sort, SpringCrudifyReadOutputMode mode, String userId)
 			throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Getting entities, mode {}, page size {}, page index {}, filter {}, sort {}", tenantId, this.domain, mode, pageSize, pageIndex, filter, sort);
 		try {
@@ -190,12 +190,12 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public Entity updateEntity(String tenantId, Entity entity) throws SpringCrudifyEntityException {
+	public Entity updateEntity(String tenantId, Entity entity, String userId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Updating entity with Uuid " + entity.getUuid(), tenantId, this.domain);
 		Entity updated = null;
 		
 		if(this.business.isPresent()) {
-			this.business.get().beforeUpdate(tenantId, entity);
+			this.business.get().beforeUpdate(tenantId, userId, entity);
 		}
 
 		if (this.connector.isPresent()) {
@@ -228,10 +228,10 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public void deleteEntity(String tenantId, String uuid) throws SpringCrudifyEntityException {
+	public void deleteEntity(String tenantId, String uuid, String userId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Deleting entity with Uuid " + uuid, tenantId, this.domain);
 
-		Entity entity = this.getEntity(tenantId, uuid);
+		Entity entity = this.getEntity(tenantId, uuid, userId);
 
 		if (entity == null) {
 			throw new SpringCrudifyEntityException(SpringCrudifyEntityException.ENTITY_NOT_FOUND,
@@ -239,7 +239,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 		}
 		
 		if(this.business.isPresent()) {
-			this.business.get().beforeDelete(tenantId, entity);
+			this.business.get().beforeDelete(tenantId, userId, entity);
 		}
 		
 		if (this.connector.isPresent()) {
@@ -266,13 +266,13 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public void deleteEntities(final String tenantId) throws SpringCrudifyEntityException {
+	public void deleteEntities(final String tenantId, String userId) throws SpringCrudifyEntityException {
 		log.info("[Tenant {}] [Domain {}] Deleting all entities", tenantId, this.domain);
 		List<Entity> entities = this.repository.get().getEntities(tenantId, 0, 1, null, null);
 
 		for (Entity s : entities) {
 			try {
-				this.deleteEntity(tenantId, s.getUuid());
+				this.deleteEntity(tenantId, s.getUuid(), userId);
 			} catch (SpringCrudifyEntityException e) {
 				throw new SpringCrudifyEntityException(SpringCrudifyEntityException.UNKNOWN_ERROR,
 						"Error during entities deletion");
@@ -281,7 +281,7 @@ public class SpringCrudifyController<Entity extends ISpringCrudifyEntity, Dto ex
 	}
 
 	@Override
-	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter) throws SpringCrudifyEntityException {
+	public long getEntityTotalCount(String tenantId, SpringCrudifyLiteral filter, String userId) throws SpringCrudifyEntityException {
 		if (this.connector.isPresent()) {
 			try {
 				Future<List<Entity>> list = this.connector.get().requestList(tenantId, null, null);
