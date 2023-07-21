@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import org.sdc.spring.domain.crudify.repository.dto.ISpringCrudifyDTOObject;
 import org.sdc.spring.domain.crudify.security.authentication.ISpringCrudifyAuthenticationManager;
 import org.sdc.spring.domain.crudify.security.authentication.ISpringCrudifySecurityException;
-import org.sdc.spring.domain.crudify.security.authentication.ws.RolesRestService;
+import org.sdc.spring.domain.crudify.security.authentication.ws.AuthorizationsRestService;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorization;
 import org.sdc.spring.domain.crudify.security.authorization.ISpringCrudifyAuthorizationManager;
 import org.sdc.spring.domain.crudify.security.tenants.SpringCrudifyTenantVerifier;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,14 +49,23 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 	private Optional<SpringCrudifyTenantVerifier> tenantVerifier;
 
 	@Getter
-	private ArrayList<ISpringCrudifyAuthorization> authorizations;
+	private List<ISpringCrudifyAuthorization> authorizations;
 	
 	@Inject
-	private Optional<RolesRestService> rolesRestService;
+	private Optional<AuthorizationsRestService> authorizationsRestService;
 	
-	@Override
-	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
+	public List<String> getAuthorizationStringList(){
+		ArrayList<String> list = new ArrayList<String>();
+		for( ISpringCrudifyAuthorization authorization: this.authorizations) {
+			list.add(authorization.getAuthorization());
+		}
 		
+		return list;
+	}
+	
+	@PostConstruct
+	private void setAuthorizations() {
+
 		this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
 		
 		this.services.forEach(service -> {
@@ -68,16 +78,19 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 			this.authorizations.addAll(serviceAuthorizations);
 		});
 		
-		if( this.rolesRestService.isPresent() ) {
-			this.authorizations.addAll(this.rolesRestService.get().getCustomAuthorizations());
+		if( this.authorizationsRestService.isPresent() ) {
+			this.authorizations.addAll(this.authorizationsRestService.get().getCustomAuthorizations());
 			
-			this.rolesRestService.get().setRoles(this.authorizations);
-		}
-		
+			this.authorizationsRestService.get().setAuthorizations(this.authorizations);
+		}		
+	}
+	
+	@Override
+	public HttpSecurity configureFilterChain(HttpSecurity http) throws ISpringCrudifySecurityException {
 		this.authorizations.forEach(a -> {
 			try {
 				log.info("Created Basic Authorization {}", a);
-				http.authorizeHttpRequests().requestMatchers(a.getHttpMethod(), a.getEndpoint()).hasAnyAuthority(a.getRole());
+				http.authorizeHttpRequests().requestMatchers(a.getHttpMethod(), a.getEndpoint()).hasAnyAuthority(a.getAuthorization());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
