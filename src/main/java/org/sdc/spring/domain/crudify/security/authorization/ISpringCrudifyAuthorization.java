@@ -6,7 +6,7 @@ public interface ISpringCrudifyAuthorization {
 	
 	String getEndpoint();
 	
-	String getRole();
+	String getAuthorization();
 	
 	HttpMethod getHttpMethod();
 	

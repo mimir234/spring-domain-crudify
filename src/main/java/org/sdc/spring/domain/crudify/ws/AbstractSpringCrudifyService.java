@@ -69,18 +69,18 @@ public abstract class AbstractSpringCrudifyService<Entity extends ISpringCrudify
 	public List<ISpringCrudifyAuthorization> createAuthorizations() {
 		if( this.authorizations == null ) {
 			this.authorizations = new ArrayList<ISpringCrudifyAuthorization>();
+			if( this.createCustomAuthorizations() != null ) {
+				this.authorizations.addAll(this.createCustomAuthorizations());
+			}
 			
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-read", HttpMethod.GET));
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-create", HttpMethod.POST));
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase(), this.domain.toLowerCase()+"-delete-all", HttpMethod.DELETE));	
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/count", this.domain.toLowerCase()+"-get-count", HttpMethod.GET));
-			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-read", HttpMethod.GET));
+			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-read-one", HttpMethod.GET));
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-update", HttpMethod.PATCH));
 			this.authorizations.add(new BasicSpringCrudifyAuthorization("/"+this.domain.toLowerCase()+"/*", this.domain.toLowerCase()+"-delete-one", HttpMethod.DELETE));
 			
-			if( this.createCustomAuthorizations() != null ) {
-				this.authorizations.addAll(this.createCustomAuthorizations());
-			}
 		}
 		return authorizations;
 	}

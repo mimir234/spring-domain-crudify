@@ -10,13 +10,14 @@ import lombok.Getter;
 public class BasicSpringCrudifyAuthorization implements ISpringCrudifyAuthorization {
 
 	private String endpoint;
-	private String role; 
+	private String authorization; 
 	private HttpMethod httpMethod;
 	
 	@Override
 	public String toString() {
 		
-		return "[endpoint ["+this.endpoint+"] role ["+this.role+"] httpMethod ["+this.httpMethod+"]]";
+		return "[endpoint ["+this.endpoint+"] authorization ["+this.authorization+"] httpMethod ["+this.httpMethod+"]]";
 	}
+
 
 }

@@ -4,7 +4,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.sdc</groupId>
 	<artifactId>spring-domain-crudify</artifactId>
-	<version>1.0.10</version>
+
+	<version>1.0.11</version>
+
 
 	<licenses>
 		<license>
