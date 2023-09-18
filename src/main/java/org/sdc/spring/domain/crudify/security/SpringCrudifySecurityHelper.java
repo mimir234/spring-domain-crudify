@@ -126,5 +126,4 @@ public class SpringCrudifySecurityHelper implements ISpringCrudifySecurityHelper
 		return http;
 
 	}
-
 }
